@@ -1,1 +1,943 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>E-Survei Laboratorium Jalan Raya</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Outfit & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+    <style>
+        :root {
+            --primary: #4338ca;      /* Indigo 700 */
+            --primary-light: #818cf8;
+            --secondary: #0f172a;    /* Slate 900 */
+            --accent: #10b981;       /* Emerald 500 */
+            --surface: #ffffff;
+            --body-bg: #f8fafc;      /* Slate 50 */
+            --glass: rgba(255, 255, 255, 0.8);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--secondary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- SISTEM HALAMAN --- */
+        .page { display: none; animation: slideUp 0.6s ease-out; }
+        .page.active { display: block; }
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        /* --- NAVBAR --- */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1rem 0;
+            z-index: 1050;
+        }
+        .navbar-brand { font-weight: 800; font-size: 1.4rem; color: var(--secondary) !important; letter-spacing: -0.5px; }
+        .navbar-brand span { color: var(--primary); }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            padding: 120px 0 80px;
+            background: radial-gradient(circle at top right, #e0e7ff 0%, #f8fafc 50%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: ''; position: absolute; top: -100px; right: -100px; width: 400px; height: 400px;
+            background: var(--primary); filter: blur(150px); opacity: 0.05; border-radius: 50%;
+        }
+        .hero-img {
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            width: 100%; height: 450px; object-fit: cover;
+            transition: var(--transition);
+        }
+        .hero-img:hover { transform: scale(1.02); }
+
+        /* --- CARDS & UI ELEMENTS --- */
+        .section-title {
+            font-weight: 800; font-size: 2.2rem; color: var(--secondary); margin-bottom: 1.5rem; letter-spacing: -1px;
+        }
+        .feature-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 28px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            transition: var(--transition);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            cursor: pointer;
+        }
+        .feature-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
+            border-color: var(--primary-light);
+        }
+        .feature-icon {
+            width: 60px; height: 60px;
+            background: #e0e7ff;
+            color: var(--primary);
+            font-size: 1.8rem;
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .testimonial-card {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: 32px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+        .testimonial-card::before {
+            content: "\f10d"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; top: 20px; right: 30px; font-size: 3rem; color: #f1f5f9;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-primary {
+            background-color: var(--primary);
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 16px;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(67, 56, 202, 0.3);
+            transition: var(--transition);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(67, 56, 202, 0.4);
+        }
+
+        /* --- ROLE CARD --- */
+        .role-card {
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 3rem 2rem;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+        }
+        .role-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+        .role-icon-box {
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 28px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; margin: 0 auto 2rem;
+            box-shadow: 0 15px 20px -5px rgba(67, 56, 202, 0.3);
+        }
+        .role-admin .role-icon-box { background: linear-gradient(135deg, var(--secondary), #475569); }
+
+        /* --- FORM STYLES --- */
+        .glass-container {
+            background: var(--surface);
+            border-radius: 40px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+        .form-control, .form-select {
+            padding: 0.9rem 1.2rem;
+            border-radius: 16px;
+            border: 1.5px solid #e2e8f0;
+            background-color: #f8fafc;
+            transition: var(--transition);
+        }
+        .form-control:focus {
+            background-color: white; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.1);
+        }
+
+        /* --- LIKERT SCALE --- */
+        .likert-group { display: flex; gap: 10px; margin-top: 1rem; }
+        .likert-option { flex: 1; }
+        .likert-option input { display: none; }
+        .likert-option label {
+            display: flex; justify-content: center; align-items: center;
+            height: 60px; border-radius: 18px; cursor: pointer;
+            font-weight: 700; background: #f1f5f9; color: #64748b;
+            transition: var(--transition); border: 2px solid transparent;
+        }
+        .likert-option input:checked + label { color: white; transform: scale(1.05); }
+        .likert-option input[value="1"]:checked + label { background: #f43f5e; box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.4); }
+        .likert-option input[value="2"]:checked + label { background: #f59e0b; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.4); }
+        .likert-option input[value="3"]:checked + label { background: #64748b; box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.4); }
+        .likert-option input[value="4"]:checked + label { background: #10b981; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4); }
+        .likert-option input[value="5"]:checked + label { background: var(--primary); box-shadow: 0 10px 15px -3px rgba(67, 56, 202, 0.4); }
+
+        /* --- STATS CARD --- */
+        .stats-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+        .stats-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+        .stats-value { font-size: 1.25rem; font-weight: 800; color: var(--secondary); margin: 0.5rem 0; }
+        .stats-indicator { font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; }
+        .indicator-up { color: var(--accent); }
+        .indicator-down { color: #f43f5e; }
+
+        /* --- FOOTER --- */
+        .lab-footer {
+            background: var(--secondary);
+            color: #94a3b8;
+            padding: 80px 0 40px;
+            margin-top: 100px;
+            border-top-left-radius: 60px; border-top-right-radius: 60px;
+        }
+        .footer-logo { color: white; font-weight: 800; font-size: 1.6rem; margin-bottom: 1.5rem; letter-spacing: -1px; }
+        .contact-item { margin-bottom: 12px; font-size: 0.95rem; }
+        .contact-item i { width: 30px; color: var(--primary-light); }
+
+        @media (max-width: 768px) {
+            .hero-section { padding-top: 100px; }
+            .section-title { font-size: 1.8rem; }
+            .glass-container { padding: 2rem 1.5rem; }
+            .likert-option label { height: 50px; font-size: 0.9rem; border-radius: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#" onclick="navigate('landing-page')">
+                <span>LAB</span> JALAN RAYA
+            </a>
+            <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm d-none d-sm-block" onclick="navigate('role-selection')">
+                Mulai Survei
+            </button>
+        </div>
+    </nav>
+
+    <!-- ================= LANDING PAGE ================= -->
+    <div id="landing-page" class="page active">
+        <section class="hero-section">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-6 mb-5 mb-lg-0">
+                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-3 fw-bold">Official E-Survey System</span>
+                        <h1 class="display-4 fw-800 mb-3" style="letter-spacing: -2px;">Laboratorium Jalan Raya Universitas Lampung</h1>
+                        <p class="lead mb-4 text-secondary opacity-75">Sistem evaluasi digital untuk meningkatkan mutu pelayanan pengujian material, riset transportasi, dan praktikum mahasiswa.</p>
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-primary btn-lg rounded-pill" onclick="navigate('role-selection')">Mulai Survei <i class="fas fa-chevron-right ms-2"></i></button>
+                            <a href="#profil" class="btn btn-outline-secondary btn-lg rounded-pill">Lihat Profil</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <img src="img/lab-utama.jpg" alt="Laboratorium Jalan Raya" class="hero-img" onerror="this.src='https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80'">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Layanan -->
+        <section class="container py-5" id="profil">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Layanan & Fasilitas</h2>
+                <p class="text-muted">Standar operasional pengujian material jalan raya terlengkap.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-microscope"></i></div>
+                        <h5 class="fw-bold">Riset Inovasi</h5>
+                        <p class="text-muted small">Mendukung penelitian skripsi, tesis, dan riset dosen dengan peralatan pengujian aspal dan agregat standar SNI.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-graduation-cap"></i></div>
+                        <h5 class="fw-bold">Edukasi Praktikum</h5>
+                        <p class="text-muted small">Pusat pembelajaran praktis bagi mahasiswa Teknik Sipil untuk memahami mekanika jalan raya.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-vials"></i></div>
+                        <h5 class="fw-bold">Jasa Uji Publik</h5>
+                        <p class="text-muted small">Layanan profesional pengujian material untuk kebutuhan konstruksi jalan oleh mitra instansi & swasta.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistik Landing Page -->
+        <section class="container py-5 border-top border-light">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Indeks Kepuasan Pengguna</h2>
+                <p class="text-muted">Rata-rata penilaian dan indikator performa laboratorium kami.</p>
+            </div>
+            <div class="row g-4">
+                <!-- Statistik Praktikum -->
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-label"><i class="fas fa-flask me-2"></i>Praktikum</div>
+                        <div class="stats-value" id="land-praktikum-avg">0.0</div>
+                        <div class="small text-muted mb-3" id="land-praktikum-total">0 Responden</div>
+                        <div class="stats-indicator indicator-up" id="land-praktikum-strong">
+                            <i class="fas fa-star me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="stats-indicator indicator-down" id="land-praktikum-weak">
+                            <i class="fas fa-arrow-down me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="mt-3 progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" id="land-praktikum-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Statistik Penelitian -->
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-label"><i class="fas fa-microscope me-2"></i>Penelitian</div>
+                        <div class="stats-value" id="land-penelitian-avg">0.0</div>
+                        <div class="small text-muted mb-3" id="land-penelitian-total">0 Responden</div>
+                        <div class="stats-indicator indicator-up" id="land-penelitian-strong">
+                            <i class="fas fa-star me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="stats-indicator indicator-down" id="land-penelitian-weak">
+                            <i class="fas fa-arrow-down me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="mt-3 progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" id="land-penelitian-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Statistik Uji Lab -->
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-label"><i class="fas fa-vial me-2"></i>Jasa Uji Lab</div>
+                        <div class="stats-value" id="land-uji-avg">0.0</div>
+                        <div class="small text-muted mb-3" id="land-uji-total">0 Responden</div>
+                        <div class="stats-indicator indicator-up" id="land-uji-strong">
+                            <i class="fas fa-star me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="stats-indicator indicator-down" id="land-uji-weak">
+                            <i class="fas fa-arrow-down me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="mt-3 progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" id="land-uji-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimoni -->
+        <section class="bg-white py-5">
+            <div class="container py-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-4 mb-5 mb-lg-0">
+                        <h2 class="section-title">Apa Kata Mereka?</h2>
+                        <p class="text-muted">Feedback dari mahasiswa dan mitra membantu kami terus memberikan pelayanan terbaik.</p>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="testimonial-card">
+                                    <p class="text-secondary italic mb-4">"Proses perizinan penelitian sangat mudah dan asisten lab sangat kompeten membimbing penggunaan alat."</p>
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://ui-avatars.com/api/?name=Budi+Santoso&background=4338ca&color=fff" class="user-img rounded-circle me-3" width="50" height="50">
+                                        <div>
+                                            <h6 class="fw-bold mb-0">Budi Santoso</h6>
+                                            <small class="text-muted">Mahasiswa 2021</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="testimonial-card">
+                                    <p class="text-secondary italic mb-4">"Laporan hasil uji lab sangat rapi, akurat, dan pengerjaannya tepat waktu sesuai jadwal proyek kami."</p>
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://ui-avatars.com/api/?name=Andi+Pratama&background=10b981&color=fff" class="user-img rounded-circle me-3" width="50" height="50">
+                                        <div>
+                                            <h6 class="fw-bold mb-0">Andi Pratama</h6>
+                                            <small class="text-muted">Konsultan Jalan</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="lab-footer">
+            <div class="container">
+                <div class="row g-5">
+                    <div class="col-md-5">
+                        <div class="footer-logo">LAB JALAN RAYA</div>
+                        <p class="mb-4">Bagian dari Departemen Teknik Sipil, Fakultas Teknik, Universitas Lampung. Terdepan dalam inovasi infrastruktur jalan.</p>
+                        <div class="d-flex gap-3">
+                            <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="btn btn-outline-light btn-sm rounded-circle"><i class="fab fa-facebook"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-white fw-bold mb-4 text-uppercase">Informasi Kontak</h6>
+                        <div class="contact-item"><i class="fas fa-map-marker-alt"></i> Gedung H, FT Unila, Bandar Lampung</div>
+                        <div class="contact-item"><i class="fas fa-envelope"></i> labjalanraya@eng.unila.ac.id</div>
+                        <div class="contact-item"><i class="fas fa-phone"></i> (0721) 123-4567</div>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-white fw-bold mb-4 text-uppercase">Jam Operasional</h6>
+                        <p class="small text-white opacity-75">Senin - Jumat<br><span class="fw-bold">08:00 - 16:00 WIB</span></p>
+                        <p class="small text-white opacity-75 mt-3">Sabtu - Minggu<br><span class="fw-bold">Tutup</span></p>
+                    </div>
+                </div>
+                <div class="text-center mt-5 pt-4 border-top border-secondary">
+                    <p class="small">© 2026 Laboratorium Jalan Raya Unila. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ================= PILIH PERAN ================= -->
+    <div id="role-selection" class="page">
+        <div class="container mt-5 py-5">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Selamat Datang</h2>
+                <p class="text-muted">Pilih jenis akses untuk melanjutkan ke sistem survei</p>
+            </div>
+            <div class="row justify-content-center g-4">
+                <div class="col-md-5 col-lg-4">
+                    <div class="role-card" onclick="navigate('respondent-dashboard')">
+                        <div class="role-icon-box"><i class="fas fa-user-pen"></i></div>
+                        <h4 class="fw-bold">Responden</h4>
+                        <p class="text-muted small mb-4">Saya ingin memberikan masukan terhadap layanan laboratorium.</p>
+                        <div class="btn btn-primary w-100 rounded-pill">Mulai Isi Survei</div>
+                    </div>
+                </div>
+                <div class="col-md-5 col-lg-4">
+                    <div class="role-card role-admin" onclick="checkAdminLogin()">
+                        <div class="role-icon-box"><i class="fas fa-user-shield"></i></div>
+                        <h4 class="fw-bold">Admin</h4>
+                        <p class="text-muted small mb-4">Akses terbatas untuk monitoring data dan laporan evaluasi.</p>
+                        <div class="btn btn-outline-secondary w-100 rounded-pill">Masuk Panel Admin</div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-5">
+                <button class="btn btn-link text-decoration-none text-secondary" onclick="navigate('landing-page')"><i class="fas fa-arrow-left me-2"></i>Kembali ke Beranda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Responden -->
+    <div id="respondent-dashboard" class="page">
+        <div class="container mt-5 pt-3">
+            <div class="glass-container text-center">
+                <h3 class="fw-bold mb-5">Kategori Survei</h3>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card" onclick="startSurvey('Praktikum')">
+                            <i class="fas fa-flask fs-1 mb-3 text-primary"></i>
+                            <h5 class="fw-bold">Praktikum</h5>
+                            <button class="btn btn-sm btn-light mt-2 rounded-pill">Pilih</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card" onclick="startSurvey('Penelitian')">
+                            <i class="fas fa-microscope fs-1 mb-3 text-primary"></i>
+                            <h5 class="fw-bold">Penelitian</h5>
+                            <button class="btn btn-sm btn-light mt-2 rounded-pill">Pilih</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card" onclick="startSurvey('Uji Lab')">
+                            <i class="fas fa-hard-hat fs-1 mb-3 text-primary"></i>
+                            <h5 class="fw-bold">Jasa Uji Lab</h5>
+                            <button class="btn btn-sm btn-light mt-2 rounded-pill">Pilih</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-link mt-5 text-secondary" onclick="navigate('role-selection')">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Biodata -->
+    <div id="biodata" class="page">
+        <div class="container mt-5">
+            <div class="glass-container" style="max-width: 650px; margin: 0 auto;">
+                <h3 class="fw-bold mb-4 text-center">Identitas Responden</h3>
+                <form id="biodataForm" onsubmit="handleBiodata(event)">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="nama" placeholder="Masukkan nama Anda..." required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-secondary">NPM / NIP</label>
+                            <input type="text" class="form-control" id="npm" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-secondary">Angkatan</label>
+                            <select class="form-select" id="angkatan" required>
+                                <option value="">Pilih...</option>
+                                <option value="2021">2021</option>
+                                <option value="2022">2022</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="Umum">Umum / Mitra</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Prodi / Instansi</label>
+                        <input type="text" class="form-control" id="prodi" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill shadow">Lanjut ke Kuesioner</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Kuesioner -->
+    <div id="survey" class="page">
+        <div class="container mt-4 pb-5">
+            <div class="glass-container" style="max-width: 850px; margin: 0 auto;">
+                <div class="text-center mb-5">
+                    <h3 class="fw-bold text-primary">Kuesioner Kepuasan</h3>
+                    <p id="survey-title-display" class="badge bg-secondary rounded-pill px-4"></p>
+                </div>
+                <form id="surveyForm" onsubmit="handleSurvey(event)">
+                    <div id="dynamicQuestionsArea"></div>
+                    <div class="mt-5 mb-5">
+                        <label class="form-label fw-bold text-uppercase small text-secondary">Kritik & Saran Perbaikan</label>
+                        <textarea class="form-control" id="saran" rows="4" placeholder="Masukan anda sangat berharga bagi kami..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-lg">Kirim Feedback <i class="fas fa-paper-plane ms-2"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Terima Kasih -->
+    <div id="thank-you" class="page">
+        <div class="container mt-5 pt-5 text-center">
+            <div class="glass-container py-5">
+                <div class="role-icon-box bg-success" style="background: var(--accent) !important;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h2 class="fw-bold">Terima Kasih!</h2>
+                <p class="text-muted lead px-lg-5">Feedback Anda telah kami terima dan akan digunakan sebagai bahan evaluasi berkala di Laboratorium Jalan Raya Unila.</p>
+                <button class="btn btn-primary mt-4 rounded-pill px-5 shadow-lg" onclick="navigate('landing-page')">Kembali ke Beranda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Admin -->
+    <div id="admin-dashboard" class="page">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-bold mb-0">Panel Monitoring</h2>
+                    <p class="text-muted small">Kelola data feedback responden Lab Jalan Raya</p>
+                </div>
+                <button class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="navigate('role-selection')">
+                    <i class="fas fa-power-off me-2"></i>Keluar
+                </button>
+            </div>
+
+            <!-- Bagian Statistik Admin -->
+            <div class="row g-4 mb-5" id="stats-container">
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-label"><i class="fas fa-flask me-2"></i>Praktikum</div>
+                        <div class="stats-value" id="praktikum-avg">0.0</div>
+                        <div class="stats-indicator indicator-up" id="praktikum-strong">
+                            <i class="fas fa-star me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="stats-indicator indicator-down" id="praktikum-weak">
+                            <i class="fas fa-arrow-down me-1"></i> <span class="small">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-label"><i class="fas fa-microscope me-2"></i>Penelitian</div>
+                        <div class="stats-value" id="penelitian-avg">0.0</div>
+                        <div class="stats-indicator indicator-up" id="penelitian-strong">
+                            <i class="fas fa-star me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="stats-indicator indicator-down" id="penelitian-weak">
+                            <i class="fas fa-arrow-down me-1"></i> <span class="small">-</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-label"><i class="fas fa-vial me-2"></i>Jasa Uji Lab</div>
+                        <div class="stats-value" id="uji-avg">0.0</div>
+                        <div class="stats-indicator indicator-up" id="uji-strong">
+                            <i class="fas fa-star me-1"></i> <span class="small">-</span>
+                        </div>
+                        <div class="stats-indicator indicator-down" id="uji-weak">
+                            <i class="fas fa-arrow-down me-1"></i> <span class="small">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-container p-0 overflow-hidden mb-5">
+                <div class="p-4 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i>Data Respon Masuk (<span id="submission-count">0</span>)</h6>
+                    <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="downloadPDFReport()">
+                        <i class="fas fa-download me-2"></i>Export PDF
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 py-3">Responden</th>
+                                <th class="py-3">Kategori</th>
+                                <th class="py-3">Tanggal</th>
+                                <th class="text-center py-3">Skor Avg</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- =========================================================
+         BAGIAN LOGIC & STORAGE (LOKAL & FIREBASE PREP)
+         ========================================================= -->
+    <script>
+        /* * ==========================================
+         * 1. FIREBASE CONFIGURATION (Placeholder)
+         * ==========================================
+         * Saat Anda siap, tambahkan SDK Firebase dan 
+         * inisialisasi di sini menggunakan module script.
+         */
+        
+        // Data Global
+        let submissions = [];
+        let currentSurvey = { type: '', biodata: {} };
+
+        // --- Konfigurasi Soal ---
+        const surveyConfig = {
+            "Praktikum": {
+                A: { title: "Sarana & Prasarana", questions: ["Kebersihan Ruang Lab", "Kondisi Peralatan Uji", "Ketersediaan Modul & K3"] },
+                B: { title: "Kualitas Pelayanan", questions: ["Kejelasan Materi Asisten", "Keramahan Teknisi", "Ketepatan Waktu Praktikum"] }
+            },
+            "Penelitian": {
+                A: { title: "Dukungan Riset", questions: ["Ketersediaan Alat Riset Khusus", "Fleksibilitas Akses Lab", "Fasilitas Listrik & Air"] },
+                B: { title: "Bimbingan Teknis", questions: ["Prosedur Perizinan Mudah", "Bantuan Teknis Operator", "Akurasi Hasil Data"] }
+            },
+            "Uji Lab": {
+                A: { title: "Kualitas Hasil", questions: ["Peralatan Terkalibrasi", "Keamanan Sampel", "Kerapihan Laporan Hasil Uji"] },
+                B: { title: "Layanan Jasa", questions: ["Kecepatan Respon Admin", "Transparansi Biaya", "Waktu Pengerjaan Sesuai Janji"] }
+            }
+        };
+
+        // ==========================================
+        // 2. STORAGE MANAGEMENT (LOCAL STORAGE)
+        // ==========================================
+        
+        function loadData() {
+            const stored = localStorage.getItem('lab_survei_data');
+            if (stored) {
+                submissions = JSON.parse(stored);
+            } else {
+                // Data Demo Default
+                submissions = [
+                    { id: 1, date: "15/02/2024", nama: "Dian Saputra", npm: "2115011001", type: "Praktikum", skor: [5,4,4,5,5,4], saran: "Sangat baik" },
+                    { id: 2, date: "16/02/2024", nama: "Riana Dewi", npm: "2115011002", type: "Penelitian", skor: [4,4,5,4,5,5], saran: "-" }
+                ];
+                saveToLocal();
+            }
+            updateAdminDashboard();
+            renderLandingStats(); // Update stats di landing page saat load
+        }
+
+        function saveToLocal() {
+            localStorage.setItem('lab_survei_data', JSON.stringify(submissions));
+        }
+
+        // ==========================================
+        // 3. CORE FUNCTIONS (NAV & SURVEY)
+        // ==========================================
+
+        function navigate(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(pageId);
+            if(target) target.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Re-render stats jika kembali ke landing page
+            if(pageId === 'landing-page') renderLandingStats();
+        }
+
+        function startSurvey(type) {
+            currentSurvey.type = type;
+            navigate('biodata');
+        }
+
+        function handleBiodata(e) {
+            e.preventDefault();
+            currentSurvey.biodata = {
+                nama: document.getElementById('nama').value,
+                npm: document.getElementById('npm').value,
+                angkatan: document.getElementById('angkatan').value,
+                prodi: document.getElementById('prodi').value
+            };
+            document.getElementById('survey-title-display').innerText = currentSurvey.type;
+            renderQuestions();
+            navigate('survey');
+        }
+
+        function renderQuestions() {
+            const area = document.getElementById('dynamicQuestionsArea');
+            const config = surveyConfig[currentSurvey.type];
+            area.innerHTML = '';
+
+            ['A', 'B'].forEach((key, secIndex) => {
+                const section = config[key];
+                area.innerHTML += `
+                    <div class="mt-5 mb-4 px-2">
+                        <h5 class="fw-bold text-dark mb-1">${section.title}</h5>
+                        <p class="small text-muted mb-0">Berikan penilaian Anda pada skala 1-5</p>
+                    </div>
+                `;
+                
+                section.questions.forEach((q, qIndex) => {
+                    const qId = `q_${key}_${qIndex}`;
+                    area.innerHTML += `
+                        <div class="mb-4 bg-white p-4 rounded-4 border shadow-sm">
+                            <p class="fw-bold text-secondary mb-3">${qIndex + 1 + (secIndex * 3)}. ${q}</p>
+                            <div class="likert-group">
+                                ${[1,2,3,4,5].map(v => `
+                                    <div class="likert-option">
+                                        <input type="radio" name="${qId}" id="${qId}_${v}" value="${v}" required>
+                                        <label for="${qId}_${v}">${v}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function handleSurvey(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const skorArr = Array.from(formData.values()).map(Number);
+            
+            const newSubmission = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString('id-ID'),
+                nama: currentSurvey.biodata.nama,
+                npm: currentSurvey.biodata.npm,
+                type: currentSurvey.type,
+                skor: skorArr,
+                saran: document.getElementById('saran').value || "-"
+            };
+
+            // Simpan secara lokal
+            submissions.unshift(newSubmission);
+            saveToLocal();
+            
+            Swal.fire({
+                title: 'Berhasil Terkirim!',
+                text: 'Terima kasih telah berpartisipasi.',
+                icon: 'success',
+                confirmButtonColor: '#4338ca'
+            }).then(() => {
+                navigate('thank-you');
+                e.target.reset();
+                document.getElementById('biodataForm').reset();
+            });
+        }
+
+        // ==========================================
+        // 5. ADMIN LOGIC & STATISTICS
+        // ==========================================
+
+        function checkAdminLogin() {
+            Swal.fire({
+                title: 'Akses Terbatas',
+                text: 'Masukkan password admin (admin123)',
+                input: 'password',
+                confirmButtonColor: '#0f172a',
+                confirmButtonText: 'Masuk',
+                showCancelButton: true
+            }).then(res => {
+                if(res.value === 'admin123') {
+                    updateAdminDashboard();
+                    navigate('admin-dashboard');
+                } else if(res.isConfirmed) {
+                    Swal.fire('Error', 'Password salah.', 'error');
+                }
+            });
+        }
+
+        function updateAdminDashboard() {
+            const tbody = document.getElementById('adminTableBody');
+            const countDisplay = document.getElementById('submission-count');
+            if(countDisplay) countDisplay.innerText = submissions.length;
+
+            renderAdminStatistics();
+
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            submissions.forEach(s => {
+                const avg = (s.skor.reduce((a,b) => a+b, 0) / s.skor.length).toFixed(1);
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-secondary">${s.nama}</div>
+                            <div class="small text-muted">NPM: ${s.npm || '-'}</div>
+                        </td>
+                        <td><span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill">${s.type}</span></td>
+                        <td class="small text-muted">${s.date}</td>
+                        <td class="text-center"><span class="fw-bold text-dark">${avg}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Statistik Dashboard Admin
+        function renderAdminStatistics() {
+            const categories = ["Praktikum", "Penelitian", "Uji Lab"];
+            const ids = ["praktikum", "penelitian", "uji"];
+
+            categories.forEach((cat, index) => {
+                const filtered = submissions.filter(s => s.type === cat);
+                const avgDisplay = document.getElementById(`${ids[index]}-avg`);
+                const strongDisplay = document.getElementById(`${ids[index]}-strong`);
+                const weakDisplay = document.getElementById(`${ids[index]}-weak`);
+
+                if (filtered.length === 0) {
+                    avgDisplay.innerText = "0.0";
+                    strongDisplay.querySelector('span').innerText = "Belum ada data";
+                    weakDisplay.querySelector('span').innerText = "Belum ada data";
+                    return;
+                }
+
+                let totals = [0, 0, 0, 0, 0, 0];
+                filtered.forEach(s => {
+                    s.skor.forEach((val, i) => totals[i] += val);
+                });
+
+                let avgs = totals.map(t => t / filtered.length);
+                let totalAvg = avgs.reduce((a, b) => a + b, 0) / 6;
+
+                let maxIdx = avgs.indexOf(Math.max(...avgs));
+                let minIdx = avgs.indexOf(Math.min(...avgs));
+
+                const questions = [...surveyConfig[cat].A.questions, ...surveyConfig[cat].B.questions];
+
+                avgDisplay.innerText = totalAvg.toFixed(1);
+                strongDisplay.querySelector('span').innerText = `${questions[maxIdx]} (${((avgs[maxIdx]/5)*100).toFixed(0)}%)`;
+                weakDisplay.querySelector('span').innerText = `${questions[minIdx]} (${((avgs[minIdx]/5)*100).toFixed(0)}%)`;
+            });
+        }
+
+        // Statistik Landing Page (DYNAMIC)
+        function renderLandingStats() {
+            const categories = ["Praktikum", "Penelitian", "Uji Lab"];
+            const prefixes = ["land-praktikum", "land-penelitian", "land-uji"];
+
+            categories.forEach((cat, index) => {
+                const filtered = submissions.filter(s => s.type === cat);
+                const avgEl = document.getElementById(`${prefixes[index]}-avg`);
+                const totalEl = document.getElementById(`${prefixes[index]}-total`);
+                const progressEl = document.getElementById(`${prefixes[index]}-progress`);
+                const strongEl = document.getElementById(`${prefixes[index]}-strong`);
+                const weakEl = document.getElementById(`${prefixes[index]}-weak`);
+
+                if (filtered.length === 0) {
+                    avgEl.innerText = "0.0";
+                    totalEl.innerText = "0 Responden";
+                    progressEl.style.width = "0%";
+                    strongEl.querySelector('span').innerText = "Belum ada data";
+                    weakEl.querySelector('span').innerText = "Belum ada data";
+                    return;
+                }
+
+                // Hitung rata-rata per pertanyaan
+                let totals = [0, 0, 0, 0, 0, 0];
+                filtered.forEach(s => {
+                    s.skor.forEach((val, i) => totals[i] += val);
+                });
+                let avgs = totals.map(t => t / filtered.length);
+                let totalAvg = avgs.reduce((a, b) => a + b, 0) / 6;
+
+                // Indikator Terbaik & Terlemah
+                let maxIdx = avgs.indexOf(Math.max(...avgs));
+                let minIdx = avgs.indexOf(Math.min(...avgs));
+                const questions = [...surveyConfig[cat].A.questions, ...surveyConfig[cat].B.questions];
+
+                avgEl.innerText = totalAvg.toFixed(1);
+                totalEl.innerText = `${filtered.length} Responden`;
+                progressEl.style.width = `${(totalAvg / 5) * 100}%`;
+                
+                // Update label indikator di landing page
+                strongEl.querySelector('span').innerText = `${questions[maxIdx]} (${((avgs[maxIdx]/5)*100).toFixed(0)}%)`;
+                weakEl.querySelector('span').innerText = `${questions[minIdx]} (${((avgs[minIdx]/5)*100).toFixed(0)}%)`;
+            });
+        }
+
+        // ==========================================
+        // 6. PDF EXPORT
+        // ==========================================
+
+        async function downloadPDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.text("Rekapitulasi E-Survei Lab Jalan Raya", 105, 20, { align: "center" });
+            const rows = submissions.map(s => [s.date, s.nama, s.type, (s.skor.reduce((a,b) => a+b, 0)/s.skor.length).toFixed(2), s.saran]);
+            doc.autoTable({ startY: 35, head: [['Tanggal', 'Nama', 'Kategori', 'Avg', 'Saran']], body: rows, headStyles: { fillColor: [67, 56, 202] }});
+            doc.save(`Laporan_E-Survei_${Date.now()}.pdf`);
+        }
+
+        window.onload = loadData;
+
+    </script>
+</body>
+</html>
