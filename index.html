@@ -233,9 +233,12 @@
             <a class="navbar-brand" href="#" onclick="navigate('landing-page')">
                 <span>LAB</span> JALAN RAYA
             </a>
-            <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm d-none d-sm-block" onclick="navigate('role-selection')">
-                Mulai Survei
-            </button>
+            <div class="d-flex align-items-center">
+                <span id="firebase-status" class="ms-2" title="Status Koneksi Firebase"></span>
+                <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm d-none d-sm-block ms-3" onclick="navigate('role-selection')">
+                    Mulai Survei
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -260,7 +263,6 @@
             </div>
         </section>
 
-        <!-- Layanan -->
         <section class="container py-5" id="profil">
             <div class="text-center mb-5">
                 <h2 class="section-title">Layanan & Fasilitas</h2>
@@ -291,14 +293,12 @@
             </div>
         </section>
 
-        <!-- Statistik Landing Page -->
         <section class="container py-5 border-top border-light">
             <div class="text-center mb-5">
                 <h2 class="section-title">Indeks Kepuasan Pengguna</h2>
                 <p class="text-muted">Rata-rata penilaian dan indikator performa laboratorium kami.</p>
             </div>
             <div class="row g-4">
-                <!-- Statistik Praktikum -->
                 <div class="col-md-4">
                     <div class="stats-card">
                         <div class="stats-label"><i class="fas fa-flask me-2"></i>Praktikum</div>
@@ -315,7 +315,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Statistik Penelitian -->
                 <div class="col-md-4">
                     <div class="stats-card">
                         <div class="stats-label"><i class="fas fa-microscope me-2"></i>Penelitian</div>
@@ -332,7 +331,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Statistik Uji Lab -->
                 <div class="col-md-4">
                     <div class="stats-card">
                         <div class="stats-label"><i class="fas fa-vial me-2"></i>Jasa Uji Lab</div>
@@ -352,47 +350,6 @@
             </div>
         </section>
 
-        <!-- Testimoni -->
-        <section class="bg-white py-5">
-            <div class="container py-4">
-                <div class="row align-items-center">
-                    <div class="col-lg-4 mb-5 mb-lg-0">
-                        <h2 class="section-title">Apa Kata Mereka?</h2>
-                        <p class="text-muted">Feedback dari mahasiswa dan mitra membantu kami terus memberikan pelayanan terbaik.</p>
-                    </div>
-                    <div class="col-lg-8">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="testimonial-card">
-                                    <p class="text-secondary italic mb-4">"Proses perizinan penelitian sangat mudah dan asisten lab sangat kompeten membimbing penggunaan alat."</p>
-                                    <div class="d-flex align-items-center">
-                                        <img src="https://ui-avatars.com/api/?name=Budi+Santoso&background=4338ca&color=fff" class="user-img rounded-circle me-3" width="50" height="50">
-                                        <div>
-                                            <h6 class="fw-bold mb-0">Budi Santoso</h6>
-                                            <small class="text-muted">Mahasiswa 2021</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="testimonial-card">
-                                    <p class="text-secondary italic mb-4">"Laporan hasil uji lab sangat rapi, akurat, dan pengerjaannya tepat waktu sesuai jadwal proyek kami."</p>
-                                    <div class="d-flex align-items-center">
-                                        <img src="https://ui-avatars.com/api/?name=Andi+Pratama&background=10b981&color=fff" class="user-img rounded-circle me-3" width="50" height="50">
-                                        <div>
-                                            <h6 class="fw-bold mb-0">Andi Pratama</h6>
-                                            <small class="text-muted">Konsultan Jalan</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
         <footer class="lab-footer">
             <div class="container">
                 <div class="row g-5">
@@ -487,44 +444,18 @@
         </div>
     </div>
 
-    <!-- Halaman Biodata -->
     <div id="biodata" class="page">
         <div class="container mt-5">
             <div class="glass-container" style="max-width: 650px; margin: 0 auto;">
                 <h3 class="fw-bold mb-4 text-center">Identitas Responden</h3>
                 <form id="biodataForm" onsubmit="handleBiodata(event)">
-                    <div class="mb-4">
-                        <label class="form-label small fw-bold text-uppercase text-secondary">Nama Lengkap</label>
-                        <input type="text" class="form-control" id="nama" placeholder="Masukkan nama Anda..." required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label small fw-bold text-uppercase text-secondary">NPM / NIP</label>
-                            <input type="text" class="form-control" id="npm" required>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label small fw-bold text-uppercase text-secondary">Angkatan</label>
-                            <select class="form-select" id="angkatan" required>
-                                <option value="">Pilih...</option>
-                                <option value="2021">2021</option>
-                                <option value="2022">2022</option>
-                                <option value="2023">2023</option>
-                                <option value="2024">2024</option>
-                                <option value="Umum">Umum / Mitra</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-5">
-                        <label class="form-label small fw-bold text-uppercase text-secondary">Prodi / Instansi</label>
-                        <input type="text" class="form-control" id="prodi" required>
-                    </div>
+                    <div id="biodataFields"></div>
                     <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill shadow">Lanjut ke Kuesioner</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Halaman Kuesioner -->
     <div id="survey" class="page">
         <div class="container mt-4 pb-5">
             <div class="glass-container" style="max-width: 850px; margin: 0 auto;">
@@ -544,7 +475,6 @@
         </div>
     </div>
 
-    <!-- Halaman Terima Kasih -->
     <div id="thank-you" class="page">
         <div class="container mt-5 pt-5 text-center">
             <div class="glass-container py-5">
@@ -558,7 +488,6 @@
         </div>
     </div>
 
-    <!-- Dashboard Admin -->
     <div id="admin-dashboard" class="page">
         <div class="container mt-5">
             <div class="d-flex justify-content-between align-items-center mb-5">
@@ -571,7 +500,6 @@
                 </button>
             </div>
 
-            <!-- Bagian Statistik Admin -->
             <div class="row g-4 mb-5" id="stats-container">
                 <div class="col-md-4">
                     <div class="stats-card">
@@ -611,12 +539,38 @@
                 </div>
             </div>
             
+            <div class="glass-container p-4 mb-4">
+                <h6 class="fw-bold mb-3"><i class="fas fa-filter me-2"></i>Filter & Export Data</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Jenis Survei</label>
+                        <select class="form-select" id="filter-type">
+                            <option value="">Semua</option>
+                            <option value="Praktikum">Praktikum</option>
+                            <option value="Penelitian">Penelitian</option>
+                            <option value="Uji Lab">Jasa Uji Lab</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Tahun Pengisian</label>
+                        <select class="form-select" id="filter-year">
+                            <option value="">Semua</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-dark btn-sm rounded-pill px-3 me-2" onclick="downloadPDFReport()">
+                            <i class="fas fa-download me-2"></i>Export PDF
+                        </button>
+                        <button class="btn btn-success btn-sm rounded-pill px-3" onclick="downloadExcelReport()">
+                            <i class="fas fa-file-excel me-2"></i>Export Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="glass-container p-0 overflow-hidden mb-5">
                 <div class="p-4 bg-light border-bottom d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2"></i>Data Respon Masuk (<span id="submission-count">0</span>)</h6>
-                    <button class="btn btn-dark btn-sm rounded-pill px-3" onclick="downloadPDFReport()">
-                        <i class="fas fa-download me-2"></i>Export PDF
-                    </button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -640,79 +594,133 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- =========================================================
-         BAGIAN LOGIC & STORAGE (LOKAL & FIREBASE PREP)
-         ========================================================= -->
     <script>
-        /* * ==========================================
-         * 1. FIREBASE CONFIGURATION (Placeholder)
-         * ==========================================
-         * Saat Anda siap, tambahkan SDK Firebase dan 
-         * inisialisasi di sini menggunakan module script.
-         */
-        
-        // Data Global
         let submissions = [];
         let currentSurvey = { type: '', biodata: {} };
 
-        // --- Konfigurasi Soal ---
         const surveyConfig = {
             "Praktikum": {
-                A: { title: "Sarana & Prasarana", questions: ["Kebersihan Ruang Lab", "Kondisi Peralatan Uji", "Ketersediaan Modul & K3"] },
-                B: { title: "Kualitas Pelayanan", questions: ["Kejelasan Materi Asisten", "Keramahan Teknisi", "Ketepatan Waktu Praktikum"] }
+                A: { title: "Ketersediaan dan Kelayakan Peralatan Laboratorium", questions: ["Peralatan praktikum yang tersedia di laboratorium sudah lengkap sesuai kebutuhan praktikum", "Jenis peralatan laboratorium sesuai dengan materi praktikum yang dilaksanakan","Peralatan praktikum berada dalam kondisi baik dan layak digunakan","Peralatan laboratorium berfungsi dengan baik saat digunakan","Jumlah peralatan laboratorium mencukupi untuk digunakan oleh seluruh kelompok praktikum","Mahasiswa dapat menggunakan peralatan praktikum tanpa harus menunggu terlalu lama","Peralatan praktikum telah disiapkan sebelum kegiatan praktikum dimulai","Peralatan praktikum tersedia tepat waktu saat dibutuhkan"] },
+                B: { title: "Kualitas Fasilitas dan Lingkungan Laboratorium", questions: ["Ruang laboratorium nyaman digunakan untuk kegiatan praktikum", "Suasana ruang laboratorium mendukung kegiatan belajar praktikum", "Pencahayaan di laboratorium memadai untuk melakukan kegiatan praktikum","Laboratorium memiliki ventilasi atau sirkulasi udara yang baik","Meja kerja/area praktikum tersedia dalam jumlah yang memadai","Tata letak peralatan dan ruang kerja memudahkan mahasiswa melakukan praktikum","Laboratorium dalam kondisi bersih sebelum dan setelah praktikum","Peralatan dan fasilitas laboratorium tertata dengan rapi"] },
+                C: { title: "Kompetensi dan Dukungan Asisten / Laboran", questions: ["Asisten praktikum memiliki kemampuan yang baik dalam mengoperasikan peralatan laboratorium","Asisten praktikum memahami prosedur penggunaan alat dan metode praktikum","Asisten praktikum menjelaskan prosedur praktikum dengan jelas sebelum kegiatan dimulai","Penjelasan yang diberikan asisten praktikum mudah dipahami oleh mahasiswa","Asisten praktikum membantu mahasiswa ketika mengalami kesulitan selama praktikum","Asisten praktikum merespons pertanyaan atau kendala mahasiswa dengan cepat","Asisten praktikum bersikap ramah dalam memberikan pelayanan kepada mahasiswa","Asisten praktikum berkomunikasi dengan baik selama kegiatan praktikum berlangsung"] },
+                D: { title: "Kejelasan Prosedur dan Modul Praktikum", questions: ["Tujuan praktikum dijelaskan dengan jelas sebelum kegiatan praktikum dimulai","Mahasiswa memahami tujuan dari setiap kegiatan praktikum yang dilakukan","Prosedur praktikum disusun secara sistematis dan mudah dipahami","Langkah-langkah praktikum dijelaskan dengan jelas sebelum kegiatan dimulai","Petunjuk penggunaan alat laboratorium dijelaskan dengan jelas","Mahasiswa mendapatkan penjelasan yang cukup mengenai cara menggunakan alat praktikum","Modul praktikum disusun dengan bahasa yang mudah dipahami","Modul praktikum memuat informasi yang lengkap mengenai kegiatan praktikum"] },
+                E: { title: "Keamanan dan Keselamatan Laboratorium", questions: ["Laboratorium menyediakan peralatan keselamatan kerja yang memadai","Fasilitas keselamatan seperti alat pemadam kebakaran atau kotak P3K tersedia di laboratorium","Prosedur keselamatan dijelaskan sebelum kegiatan praktikum dimulai","Mahasiswa memperoleh penjelasan mengenai aturan keselamatan selama praktikum","Mahasiswa diarahkan untuk mengikuti standar keselamatan selama praktikum","Kegiatan praktikum dilaksanakan sesuai dengan prosedur keselamatan yang berlaku","Lingkungan laboratorium aman untuk melakukan kegiatan praktikum","Peralatan dan bahan praktikum disimpan dengan aman di laboratorium"] },
+                F: { title: "Manajemen dan Pengelolaan Praktikum", questions: ["Kegiatan praktikum dilaksanakan sesuai dengan jadwal yang telah ditentukan","Informasi mengenai jadwal praktikum disampaikan dengan jelas kepada mahasiswa","Pelaksanaan praktikum berlangsung secara tertib dan terorganisasi","Kegiatan praktikum dapat berjalan dengan lancar tanpa kendala yang berarti","Waktu yang tersedia untuk pelaksanaan praktikum cukup untuk menyelesaikan kegiatan praktikum","Pembagian waktu dalam kegiatan praktikum sudah sesuai dengan kebutuhan praktikum","Informasi terkait pelaksanaan praktikum disampaikan dengan jelas kepada mahasiswa","Perubahan jadwal atau informasi penting diinformasikan dengan baik kepada mahasiswa"] }
             },
             "Penelitian": {
-                A: { title: "Dukungan Riset", questions: ["Ketersediaan Alat Riset Khusus", "Fleksibilitas Akses Lab", "Fasilitas Listrik & Air"] },
-                B: { title: "Bimbingan Teknis", questions: ["Prosedur Perizinan Mudah", "Bantuan Teknis Operator", "Akurasi Hasil Data"] }
+                A: { title: "Ketersediaan dan Kelayakan Fasilitas Penelitian Laboratorium", questions: ["Fasilitas laboratorium yang tersedia mendukung pelaksanaan kegiatan penelitian.", "Peralatan penelitian yang tersedia sesuai dengan kebutuhan penelitian yang dilakukan.", "Peralatan penelitian berada dalam kondisi baik dan layak digunakan.", "Fasilitas laboratorium berfungsi dengan baik selama kegiatan penelitian berlangsung.", "Fasilitas penelitian tersedia saat dibutuhkan oleh peneliti.", "Peneliti dapat menggunakan fasilitas laboratorium tanpa mengalami kendala ketersediaan."] },
+                B: { title: "Dukungan Teknis dan Pendampingan Laboratorium", questions: ["Tenaga laboratorium memiliki kemampuan yang baik dalam membantu kegiatan penelitian.", "Tenaga laboratorium mampu memberikan penjelasan teknis terkait penggunaan alat penelitian.", "Tenaga laboratorium merespons permintaan bantuan penelitian dengan cepat.", "Tenaga laboratorium bersedia membantu ketika peneliti mengalami kesulitan dalam penggunaan alat.", "Tenaga laboratorium memberikan pendampingan yang memadai selama kegiatan penelitian berlangsung.", "Peneliti merasa terbantu dengan adanya dukungan dari tenaga laboratorium."] },
+                C: { title: "Prosedur dan Kemudahan Akses Layanan Penelitian", questions: ["Prosedur penggunaan laboratorium untuk penelitian dijelaskan dengan jelas.", "Informasi terkait tata cara penggunaan fasilitas laboratorium mudah dipahami.", "Proses administrasi penggunaan laboratorium untuk penelitian mudah dilakukan.", "Persyaratan penggunaan laboratorium tidak menyulitkan peneliti.", "Proses pengajuan penggunaan laboratorium diproses dengan cepat.", "Penjadwalan penggunaan laboratorium dilakukan secara efektif."] },
+                D: { title: "Kenyamanan dan Keamanan Lingkungan Laboratorium", questions: ["Lingkungan laboratorium bersih dan nyaman untuk kegiatan penelitian.", "Tata ruang laboratorium mendukung kelancaran aktivitas penelitian.", "Laboratorium memiliki sistem keamanan yang baik untuk kegiatan penelitian.", "Peneliti merasa aman saat menggunakan fasilitas laboratorium.", "Prosedur keselamatan kerja tersedia dengan jelas di laboratorium.", "Peneliti mendapatkan informasi mengenai keselamatan kerja sebelum menggunakan fasilitas laboratorium."] }
             },
             "Uji Lab": {
-                A: { title: "Kualitas Hasil", questions: ["Peralatan Terkalibrasi", "Keamanan Sampel", "Kerapihan Laporan Hasil Uji"] },
-                B: { title: "Layanan Jasa", questions: ["Kecepatan Respon Admin", "Transparansi Biaya", "Waktu Pengerjaan Sesuai Janji"] }
+                A: { title: "Ketersediaan dan Kelayakan Peralatan Pengujian", questions: ["Peralatan pengujian yang tersedia di laboratorium sudah lengkap sesuai kebutuhan pengujian.", "Jenis peralatan pengujian sesuai dengan jenis pengujian yang dilakukan.", "Peralatan pengujian berada dalam kondisi baik dan layak digunakan.", "Peralatan pengujian berfungsi dengan baik selama proses pengujian berlangsung.", "Jumlah peralatan pengujian mencukupi untuk mendukung kegiatan pengujian.", "Pengujian dapat dilakukan tanpa harus menunggu terlalu lama karena keterbatasan alat."] },
+                B: { title: "Keandalan dan Ketepatan Hasil Pengujian", questions: ["Hasil pengujian yang diberikan laboratorium memiliki tingkat ketelitian yang baik.", "Hasil pengujian yang diperoleh dapat dipercaya untuk digunakan dalam pengambilan keputusan.", "Hasil pengujian yang diberikan laboratorium konsisten dan dapat diandalkan.", "Prosedur pengujian dilakukan sesuai dengan standar yang berlaku.", "Laporan hasil pengujian disajikan dengan jelas dan mudah dipahami.", "Informasi dalam laporan hasil pengujian lengkap dan sesuai dengan kebutuhan pengguna."] },
+                C: { title: "Kualitas Pelayanan Laboratorium kepada Mitra", questions: ["Petugas laboratorium merespons permintaan layanan pengujian dengan cepat.", "Petugas laboratorium memberikan informasi yang jelas terkait proses pengujian.", "Petugas laboratorium melayani mitra dengan sikap profesional.", "Petugas laboratorium memiliki kompetensi dalam melaksanakan kegiatan pengujian.", "Komunikasi antara laboratorium dan mitra pengujian berlangsung dengan baik.", "Laboratorium memberikan informasi perkembangan proses pengujian kepada mitra."] },
+                D: { title: "Ketepatan Waktu Pelayanan Pengujian", questions: ["Proses pengujian dilaksanakan sesuai dengan jadwal yang telah disepakati.", "Laboratorium mampu menyelesaikan pengujian dalam waktu yang telah ditentukan.", "Laporan hasil pengujian diberikan kepada mitra tepat waktu.", "Waktu penyelesaian pengujian sesuai dengan yang dijanjikan oleh laboratorium.", "Proses pelayanan pengujian dilakukan secara efisien.", "Alur pelayanan pengujian mudah dipahami oleh mitra."] },
+                E: { title: "Kenyamanan dan Kemudahan Akses Layanan", questions: ["Mitra mudah mengakses layanan pengujian di laboratorium.", "Informasi mengenai layanan pengujian tersedia dengan jelas.", "Fasilitas yang tersedia bagi mitra selama proses layanan cukup nyaman.", "Lingkungan laboratorium tertata dengan baik untuk mendukung kegiatan layanan.", "Informasi biaya pengujian disampaikan dengan jelas kepada mitra.", "Biaya layanan pengujian sesuai dengan kualitas layanan yang diberikan."] }
             }
         };
 
-        // ==========================================
-        // 2. STORAGE MANAGEMENT (LOCAL STORAGE)
-        // ==========================================
-        
-        function loadData() {
+        async function loadData() {
             const stored = localStorage.getItem('lab_survei_data');
             if (stored) {
                 submissions = JSON.parse(stored);
             } else {
-                // Data Demo Default
                 submissions = [
-                    { id: 1, date: "15/02/2024", nama: "Dian Saputra", npm: "2115011001", type: "Praktikum", skor: [5,4,4,5,5,4], saran: "Sangat baik" },
-                    { id: 2, date: "16/02/2024", nama: "Riana Dewi", npm: "2115011002", type: "Penelitian", skor: [4,4,5,4,5,5], saran: "-" }
+                    { id: 1, date: "15/02/2024", nama: "Dian Saputra", npm: "2115011001", type: "Praktikum", skor: Array(48).fill(4), saran: "Sangat baik" },
+                    { id: 2, date: "16/02/2024", nama: "Riana Dewi", npm: "2115011002", type: "Penelitian", skor: Array(25).fill(5), saran: "-" }
                 ];
                 saveToLocal();
             }
+
+            if (window.firebaseEnabled && window.fetchFirebaseSubmissions) {
+                try {
+                    const firebaseData = await window.fetchFirebaseSubmissions();
+                    if (firebaseData.length) {
+                        submissions = firebaseData;
+                        saveToLocal();
+                    }
+                } catch (err) {
+                    console.warn('Firebase load gagal:', err);
+                }
+            }
+
             updateAdminDashboard();
-            renderLandingStats(); // Update stats di landing page saat load
+            renderLandingStats();
         }
 
         function saveToLocal() {
             localStorage.setItem('lab_survei_data', JSON.stringify(submissions));
         }
 
-        // ==========================================
-        // 3. CORE FUNCTIONS (NAV & SURVEY)
-        // ==========================================
-
         function navigate(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             const target = document.getElementById(pageId);
             if(target) target.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Re-render stats jika kembali ke landing page
             if(pageId === 'landing-page') renderLandingStats();
         }
 
         function startSurvey(type) {
             currentSurvey.type = type;
+            renderBiodata();
             navigate('biodata');
+        }
+
+        function renderBiodata() {
+            const fieldsContainer = document.getElementById('biodataFields');
+            let html = '';
+            if (currentSurvey.type === 'Praktikum') {
+                html = `
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="nama" placeholder="Masukkan nama Anda..." required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-secondary">NPM</label>
+                            <input type="text" class="form-control" id="npm" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-secondary">Angkatan</label>
+                            <select class="form-select" id="angkatan" required>
+                                <option value="">Pilih...</option>
+                                <option value="2021">2021</option><option value="2022">2022</option>
+                                <option value="2023">2023</option><option value="2024">2024</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Program Studi</label>
+                        <input type="text" class="form-control" id="prodi" placeholder="Contoh: Teknik Sipil" required>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="nama" placeholder="Masukkan nama Anda..." required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-secondary">ID / NIP / NPM</label>
+                            <input type="text" class="form-control" id="npm" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold text-uppercase text-secondary">Jenis Instansi / Status</label>
+                            <input type="text" class="form-control" id="angkatan" placeholder="Contoh: Mahasiswa / Umum" required>
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label class="form-label small fw-bold text-uppercase text-secondary">Instansi / Program Studi</label>
+                        <input type="text" class="form-control" id="prodi" required>
+                    </div>
+                `;
+            }
+            fieldsContainer.innerHTML = html;
         }
 
         function handleBiodata(e) {
@@ -732,8 +740,10 @@
             const area = document.getElementById('dynamicQuestionsArea');
             const config = surveyConfig[currentSurvey.type];
             area.innerHTML = '';
-
-            ['A', 'B'].forEach((key, secIndex) => {
+            
+            let qCounter = 1;
+            // Perbaikan: Loop semua key (A, B, C, D, ...) secara dinamis
+            Object.keys(config).forEach((key) => {
                 const section = config[key];
                 area.innerHTML += `
                     <div class="mt-5 mb-4 px-2">
@@ -746,7 +756,7 @@
                     const qId = `q_${key}_${qIndex}`;
                     area.innerHTML += `
                         <div class="mb-4 bg-white p-4 rounded-4 border shadow-sm">
-                            <p class="fw-bold text-secondary mb-3">${qIndex + 1 + (secIndex * 3)}. ${q}</p>
+                            <p class="fw-bold text-secondary mb-3">${qCounter}. ${q}</p>
                             <div class="likert-group">
                                 ${[1,2,3,4,5].map(v => `
                                     <div class="likert-option">
@@ -757,11 +767,12 @@
                             </div>
                         </div>
                     `;
+                    qCounter++;
                 });
             });
         }
 
-        function handleSurvey(e) {
+        async function handleSurvey(e) {
             e.preventDefault();
             const formData = new FormData(e.target);
             const skorArr = Array.from(formData.values()).map(Number);
@@ -771,18 +782,24 @@
                 date: new Date().toLocaleDateString('id-ID'),
                 nama: currentSurvey.biodata.nama,
                 npm: currentSurvey.biodata.npm,
+                angkatan: currentSurvey.biodata.angkatan,
+                prodi: currentSurvey.biodata.prodi,
                 type: currentSurvey.type,
                 skor: skorArr,
                 saran: document.getElementById('saran').value || "-"
             };
 
-            // Simpan secara lokal
             submissions.unshift(newSubmission);
             saveToLocal();
+
+            if (window.firebaseEnabled && window.saveSubmissionToFirebase) {
+                window.saveSubmissionToFirebase(newSubmission)
+                    .catch(err => console.warn('Firebase save gagal:', err));
+            }
             
             Swal.fire({
                 title: 'Berhasil Terkirim!',
-                text: 'Terima kasih telah berpartisipasi.',
+                text: 'Terima kasih telah berpartisipasi dalam survei.',
                 icon: 'success',
                 confirmButtonColor: '#4338ca'
             }).then(() => {
@@ -792,14 +809,10 @@
             });
         }
 
-        // ==========================================
-        // 5. ADMIN LOGIC & STATISTICS
-        // ==========================================
-
         function checkAdminLogin() {
             Swal.fire({
                 title: 'Akses Terbatas',
-                text: 'Masukkan password admin (admin123)',
+                text: 'Masukkan password admin',
                 input: 'password',
                 confirmButtonColor: '#0f172a',
                 confirmButtonText: 'Masuk',
@@ -820,27 +833,66 @@
             if(countDisplay) countDisplay.innerText = submissions.length;
 
             renderAdminStatistics();
+            populateFilterYear();
 
             if(!tbody) return;
             tbody.innerHTML = '';
             
             submissions.forEach(s => {
                 const avg = (s.skor.reduce((a,b) => a+b, 0) / s.skor.length).toFixed(1);
+                
+                let labelID = "ID/NPM";
+                let detailInfo = "";
+
+                // Penyesuaian tampilan informasi di baris tabel berdasarkan jenis survei
+                if (s.type === 'Praktikum') {
+                    labelID = "NPM";
+                    detailInfo = `${s.prodi} (${s.angkatan})`;
+                } else if (s.type === 'Penelitian') {
+                    labelID = "NIP/NPM";
+                    detailInfo = `${s.prodi} - ${s.angkatan}`;
+                } else if (s.type === 'Uji Lab') {
+                    labelID = "ID/NIP";
+                    detailInfo = `${s.prodi} (${s.angkatan})`;
+                }
+
+                // HTML untuk baris tabel dengan informasi identitas lengkap di satu sel
                 tbody.innerHTML += `
                     <tr>
-                        <td class="ps-4">
+                        <td class="ps-4 py-3">
                             <div class="fw-bold text-secondary">${s.nama}</div>
-                            <div class="small text-muted">NPM: ${s.npm || '-'}</div>
+                            <div class="small text-muted">
+                                <span class="text-primary opacity-75">${labelID}:</span> ${s.npm || '-'} | 
+                                <span class="text-primary opacity-75">Detail:</span> ${detailInfo}
+                            </div>
                         </td>
-                        <td><span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill">${s.type}</span></td>
+                        <td>
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill">
+                                ${s.type}
+                            </span>
+                        </td>
                         <td class="small text-muted">${s.date}</td>
-                        <td class="text-center"><span class="fw-bold text-dark">${avg}</span></td>
+                        <td class="text-center">
+                            <span class="fw-bold text-dark">${avg}</span>
+                        </td>
                     </tr>
                 `;
             });
         }
 
-        // Statistik Dashboard Admin
+        function populateFilterYear() {
+            const yearSelect = document.getElementById('filter-year');
+            const years = new Set();
+            submissions.forEach(s => {
+                const year = s.date.split('/')[2];
+                if (year) years.add(year);
+            });
+            yearSelect.innerHTML = '<option value="">Semua</option>';
+            Array.from(years).sort().forEach(year => {
+                yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+
         function renderAdminStatistics() {
             const categories = ["Praktikum", "Penelitian", "Uji Lab"];
             const ids = ["praktikum", "penelitian", "uji"];
@@ -858,26 +910,27 @@
                     return;
                 }
 
-                let totals = [0, 0, 0, 0, 0, 0];
+                // Hitung pertanyaan total secara dinamis
+                const allQuestions = [];
+                Object.values(surveyConfig[cat]).forEach(sec => allQuestions.push(...sec.questions));
+                
+                let totals = Array(allQuestions.length).fill(0);
                 filtered.forEach(s => {
-                    s.skor.forEach((val, i) => totals[i] += val);
+                    s.skor.forEach((val, i) => { if(totals[i] !== undefined) totals[i] += val; });
                 });
 
                 let avgs = totals.map(t => t / filtered.length);
-                let totalAvg = avgs.reduce((a, b) => a + b, 0) / 6;
+                let totalAvg = avgs.reduce((a, b) => a + b, 0) / allQuestions.length;
 
                 let maxIdx = avgs.indexOf(Math.max(...avgs));
                 let minIdx = avgs.indexOf(Math.min(...avgs));
 
-                const questions = [...surveyConfig[cat].A.questions, ...surveyConfig[cat].B.questions];
-
                 avgDisplay.innerText = totalAvg.toFixed(1);
-                strongDisplay.querySelector('span').innerText = `${questions[maxIdx]} (${((avgs[maxIdx]/5)*100).toFixed(0)}%)`;
-                weakDisplay.querySelector('span').innerText = `${questions[minIdx]} (${((avgs[minIdx]/5)*100).toFixed(0)}%)`;
+                strongDisplay.querySelector('span').innerText = `${allQuestions[maxIdx].substring(0, 30)}... (${((avgs[maxIdx]/5)*100).toFixed(0)}%)`;
+                weakDisplay.querySelector('span').innerText = `${allQuestions[minIdx].substring(0, 30)}... (${((avgs[minIdx]/5)*100).toFixed(0)}%)`;
             });
         }
 
-        // Statistik Landing Page (DYNAMIC)
         function renderLandingStats() {
             const categories = ["Praktikum", "Penelitian", "Uji Lab"];
             const prefixes = ["land-praktikum", "land-penelitian", "land-uji"];
@@ -899,45 +952,301 @@
                     return;
                 }
 
-                // Hitung rata-rata per pertanyaan
-                let totals = [0, 0, 0, 0, 0, 0];
+                const allQuestions = [];
+                Object.values(surveyConfig[cat]).forEach(sec => allQuestions.push(...sec.questions));
+
+                let totals = Array(allQuestions.length).fill(0);
                 filtered.forEach(s => {
-                    s.skor.forEach((val, i) => totals[i] += val);
+                    s.skor.forEach((val, i) => { if(totals[i] !== undefined) totals[i] += val; });
                 });
                 let avgs = totals.map(t => t / filtered.length);
-                let totalAvg = avgs.reduce((a, b) => a + b, 0) / 6;
+                let totalAvg = avgs.reduce((a, b) => a + b, 0) / allQuestions.length;
 
-                // Indikator Terbaik & Terlemah
                 let maxIdx = avgs.indexOf(Math.max(...avgs));
                 let minIdx = avgs.indexOf(Math.min(...avgs));
-                const questions = [...surveyConfig[cat].A.questions, ...surveyConfig[cat].B.questions];
 
                 avgEl.innerText = totalAvg.toFixed(1);
                 totalEl.innerText = `${filtered.length} Responden`;
                 progressEl.style.width = `${(totalAvg / 5) * 100}%`;
-                
-                // Update label indikator di landing page
-                strongEl.querySelector('span').innerText = `${questions[maxIdx]} (${((avgs[maxIdx]/5)*100).toFixed(0)}%)`;
-                weakEl.querySelector('span').innerText = `${questions[minIdx]} (${((avgs[minIdx]/5)*100).toFixed(0)}%)`;
+                strongEl.querySelector('span').innerText = `${allQuestions[maxIdx].substring(0, 20)}...`;
+                weakEl.querySelector('span').innerText = `${allQuestions[minIdx].substring(0, 20)}...`;
             });
         }
 
-        // ==========================================
-        // 6. PDF EXPORT
-        // ==========================================
+        function getFilteredSubmissions() {
+            const typeFilter = document.getElementById('filter-type').value;
+            const yearFilter = document.getElementById('filter-year').value;
+            return submissions.filter(s => {
+                const typeMatch = !typeFilter || s.type === typeFilter;
+                const yearMatch = !yearFilter || s.date.split('/')[2] === yearFilter;
+                return typeMatch && yearMatch;
+            });
+        }
 
         async function downloadPDFReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.text("Rekapitulasi E-Survei Lab Jalan Raya", 105, 20, { align: "center" });
-            const rows = submissions.map(s => [s.date, s.nama, s.type, (s.skor.reduce((a,b) => a+b, 0)/s.skor.length).toFixed(2), s.saran]);
-            doc.autoTable({ startY: 35, head: [['Tanggal', 'Nama', 'Kategori', 'Avg', 'Saran']], body: rows, headStyles: { fillColor: [67, 56, 202] }});
-            doc.save(`Laporan_E-Survei_${Date.now()}.pdf`);
+    const filtered = getFilteredSubmissions();
+    if (filtered.length === 0) {
+        Swal.fire('Tidak ada data', 'Tidak ada responden yang sesuai filter.', 'warning');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    // Inisialisasi satu dokumen PDF untuk semua responden
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+
+    filtered.forEach((s, index) => {
+        // Tambahkan halaman baru mulai dari responden kedua
+        if (index > 0) {
+            doc.addPage();
+        }
+
+        // --- 1. TITLE SECTION (Minimalist & Clean) ---
+        doc.setTextColor(30, 58, 138); // Blue
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("LAPORAN EVALUASI LAYANAN LABORATORIUM JALAN RAYA", pageWidth / 2, 12, { align: "center" });
+        
+        doc.setFontSize(8.5);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text("Universitas Lampung - Fakultas Teknik", pageWidth / 2, 17, { align: "center" });
+
+        // Garis pemisah tipis
+        doc.setDrawColor(59, 130, 246);
+        doc.setLineWidth(0.3);
+        doc.line(15, 20, pageWidth - 15, 20);
+
+        // --- 2. IDENTITAS RESPONDEN (Dinamis Berdasarkan Jenis Survei) ---
+        let idY = 26;
+        doc.setFontSize(9);
+        doc.setTextColor(30, 58, 138);
+        doc.setFont("helvetica", "bold");
+        doc.text("IDENTITAS RESPONDEN", 15, idY);
+        
+        idY += 5;
+        doc.setFontSize(8);
+        doc.setTextColor(50, 50, 50);
+        
+        const leftCol = 15;
+        const rightCol = 110;
+
+        let dataKiri = [];
+        let dataKanan = [];
+
+        // Logika penyesuaian label identitas berdasarkan tipe survei
+        // Catatan: Pastikan prodi dan angkatan disimpan saat submit agar muncul di sini
+        if (s.type === 'Praktikum') {
+            dataKiri = [
+                ["Nama Lengkap", `: ${s.nama}`],
+                ["NPM", `: ${s.npm || '-'}`],
+                ["Kategori Survei", `: ${s.type}`]
+            ];
+            dataKanan = [
+                ["Program Studi", `: ${s.prodi || '-'}`],
+                ["Angkatan", `: ${s.angkatan || '-'}`],
+                ["Tanggal Isi", `: ${s.date}`]
+            ];
+        } else if (s.type === 'Penelitian') {
+            dataKiri = [
+                ["Nama Lengkap", `: ${s.nama}`],
+                ["NPM / NIP", `: ${s.npm || '-'}`],
+                ["Kategori Survei", `: ${s.type}`]
+            ];
+            dataKanan = [
+                ["Prodi / Jabatan", `: ${s.prodi || '-'}`],
+                ["Status", `: ${s.angkatan || '-'}`],
+                ["Tanggal Isi", `: ${s.date}`]
+            ];
+        } else if (s.type === 'Uji Lab') {
+            dataKiri = [
+                ["Nama Lengkap", `: ${s.nama}`],
+                ["NIP / ID", `: ${s.npm || '-'}`],
+                ["Kategori Survei", `: ${s.type}`]
+            ];
+            dataKanan = [
+                ["Instansi / Perusahaan", `: ${s.prodi || '-'}`],
+                ["Jenis Mitra", `: ${s.angkatan || '-'}`],
+                ["Tanggal Isi", `: ${s.date}`]
+            ];
+        }
+
+        dataKiri.forEach((item, i) => {
+            doc.setFont("helvetica", "bold");
+            doc.text(item[0], leftCol, idY + (i * 4.5));
+            doc.setFont("helvetica", "normal");
+            doc.text(item[1], leftCol + 35, idY + (i * 4.5));
+        });
+
+        dataKanan.forEach((item, i) => {
+            doc.setFont("helvetica", "bold");
+            doc.text(item[0], rightCol, idY + (i * 4.5));
+            doc.setFont("helvetica", "normal");
+            doc.text(item[1], rightCol + 45, idY + (i * 4.5)); // Sedikit dilebarkan jarak titik duanya
+        });
+
+        idY += 16;
+
+        // --- 3. TABEL PENILAIAN ---
+        const config = surveyConfig[s.type];
+        const tableData = [];
+        let currentSkorIdx = 0;
+
+        Object.keys(config).forEach(key => {
+            const section = config[key];
+            // Baris Indikator
+            tableData.push([
+                { 
+                    content: section.title.toUpperCase(), 
+                    colSpan: 3, 
+                    styles: { 
+                        fillColor: [245, 248, 255], 
+                        fontStyle: 'bold', 
+                        textColor: [30, 58, 138],
+                        fontSize: 7,
+                        cellPadding: 1.2 // Merapatkan padding indikator
+                    } 
+                }
+            ]);
+            // Baris Soal
+            section.questions.forEach((q, idx) => {
+                tableData.push([idx + 1, q, s.skor[currentSkorIdx] || "-"]);
+                currentSkorIdx++;
+            });
+        });
+
+        doc.autoTable({
+            startY: idY,
+            head: [['NO', 'BUTIR PERNYATAAN EVALUASI', 'SKOR']],
+            body: tableData,
+            theme: 'grid',
+            headStyles: { 
+                fillColor: [30, 58, 138], 
+                textColor: [255, 255, 255], 
+                fontSize: 8,
+                halign: 'center',
+                cellPadding: 1.5 // Merapatkan padding header
+            },
+            columnStyles: { 
+                0: { cellWidth: 8, halign: 'center' }, 
+                2: { cellWidth: 14, halign: 'center', fontStyle: 'bold' } 
+            },
+            styles: { 
+                fontSize: 8, 
+                cellPadding: 1.5, // Merapatkan spasi antar baris tabel
+                valign: 'middle',
+                lineWidth: 0.1,
+                lineColor: [200, 200, 200],
+                textColor: [40, 40, 40]
+            },
+            margin: { left: 15, right: 15, bottom: 20 },
+            pageBreak: 'auto'
+        });
+
+        // --- 4. SARAN (Minimalis) ---
+        let finalY = doc.lastAutoTable.finalY + 6;
+        
+        // Cek jika sisa ruang tidak cukup untuk box saran, pindah halaman
+        if (finalY > pageHeight - 20) {
+            doc.addPage();
+            finalY = 20;
+        }
+
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 58, 138);
+        doc.text("Kritik & Saran:", 15, finalY);
+        
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(7.5);
+        doc.setTextColor(80, 80, 80);
+        const splitSaran = doc.splitTextToSize(s.saran || "Tidak ada saran.", pageWidth - 30);
+        doc.text(splitSaran, 15, finalY + 4);
+
+        // --- 5. FOOTER (Status Halaman) ---
+        doc.setFontSize(7);
+        doc.setTextColor(180, 180, 180);
+        doc.text(`E-Survei Lab Jalan Raya Unila | Responden: ${s.nama}`, 15, pageHeight - 8);
+        doc.text(`Responden ke-${index + 1} | Total Responden: ${filtered.length}`, pageWidth - 15, pageHeight - 8, { align: "right" });
+    });
+
+    // Simpan satu file untuk semua responden
+    doc.save(`Laporan_E-Survei_Lengkap_${Date.now()}.pdf`);
+}
+
+        function downloadExcelReport() {
+            const filtered = getFilteredSubmissions();
+            if (filtered.length === 0) {
+                Swal.fire('Tidak ada data', 'Tidak ada responden yang sesuai filter.', 'warning');
+                return;
+            }
+
+            const data = [];
+            filtered.forEach(s => {
+                const config = surveyConfig[s.type];
+                const allQuestions = [];
+                Object.values(config).forEach(sec => allQuestions.push(...sec.questions));
+                
+                const row = {
+                    Tanggal: s.date,
+                    Nama: s.nama,
+                    'ID/NPM': s.npm || '-',
+                    Kategori: s.type
+                };
+                allQuestions.forEach((q, idx) => {
+                    row[q] = s.skor[idx];
+                });
+                row.Saran = s.saran;
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Responden");
+            XLSX.writeFile(wb, `Data_E-Survei_${Date.now()}.xlsx`);
         }
 
         window.onload = loadData;
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyAq0bvA6VysZdeQuwWyP7pyZp-70SKr4n0",
+            authDomain: "e-survei-ljr.firebaseapp.com",
+            projectId: "e-survei-ljr",
+            storageBucket: "e-survei-ljr.firebasestorage.app",
+            messagingSenderId: "736288179688",
+            appId: "1:736288179688:web:59cd8fe04164f5f024505d",
+            measurementId: "G-L6Z6X9GESJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        try { getAnalytics(app); } catch (err) { console.warn('Firebase analytics tidak dapat diinisialisasi', err); }
+
+        const db = getFirestore(app);
+        const submissionsCol = collection(db, 'submissions');
+
+        async function saveSubmissionToFirebase(data) {
+            if (!submissionsCol) return;
+            await addDoc(submissionsCol, { ...data, createdAt: Date.now() });
+        }
+
+        async function fetchFirebaseSubmissions() {
+            if (!submissionsCol) return [];
+            const snapshot = await getDocs(submissionsCol);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
+
+        window.firebaseEnabled = true;
+        window.saveSubmissionToFirebase = saveSubmissionToFirebase;
+        window.fetchFirebaseSubmissions = fetchFirebaseSubmissions;
+
+        // Update ikon status Firebase
+        document.getElementById('firebase-status').innerHTML = '<i class="fas fa-cloud text-success" title="Terkoneksi dengan Firebase Cloud"></i>';
     </script>
 </body>
 </html>
