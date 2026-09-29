@@ -541,9 +541,17 @@
             </div>
             
             <div class="glass-container p-4 mb-4">
-                <h6 class="fw-bold mb-3"><i class="fas fa-filter me-2"></i>Filter & Export Data</h6>
+                <h6 class="fw-bold mb-3"><i class="fas fa-filter me-2"></i>Cari, Filter & Export Data</h6>
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <!-- PENCARIAN NAMA / NPM -->
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Cari Nama / NPM</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white" style="border-radius: 16px 0 0 16px;"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" id="search-input" placeholder="Ketik nama atau NPM..." autocomplete="off" style="border-radius: 0 16px 16px 0;">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label small fw-bold">Jenis Survei</label>
                         <select class="form-select" id="filter-type">
                             <option value="">Semua</option>
@@ -552,13 +560,21 @@
                             <option value="Uji Lab">Jasa Uji Lab</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small fw-bold">Tahun Pengisian</label>
                         <select class="form-select" id="filter-year">
                             <option value="">Semua</option>
                         </select>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
+                    <!-- URUTAN TANGGAL PENGISIAN -->
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Urutkan Tanggal Pengisian</label>
+                        <select class="form-select" id="sort-order">
+                            <option value="desc">Terbaru di atas</option>
+                            <option value="asc">Terlama di atas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8 d-flex align-items-end">
                         <button class="btn btn-dark btn-sm rounded-pill px-3 me-2" onclick="downloadPDFReport()">
                             <i class="fas fa-download me-2"></i>Export PDF
                         </button>
@@ -624,6 +640,43 @@
                 E: { title: "Kenyamanan dan Kemudahan Akses Layanan", questions: ["Mitra mudah mengakses layanan pengujian di laboratorium.", "Informasi mengenai layanan pengujian tersedia dengan jelas.", "Fasilitas yang tersedia bagi mitra selama proses layanan cukup nyaman.", "Lingkungan laboratorium tertata dengan baik untuk mendukung kegiatan layanan.", "Informasi biaya pengujian disampaikan dengan jelas kepada mitra.", "Biaya layanan pengujian sesuai dengan kualitas layanan yang diberikan."] }
             }
         };
+
+        /* ================= HELPER ================= */
+
+        // Mencegah teks dari responden dibaca sebagai kode HTML
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Ubah "d/m/yyyy" (format id-ID) menjadi timestamp
+        function parseTanggalID(str) {
+            const p = String(str || '').split('/').map(Number);
+            if (p.length === 3 && p.every(n => !isNaN(n))) {
+                return new Date(p[2], p[1] - 1, p[0]).getTime();
+            }
+            return 0;
+        }
+
+        // Waktu pengisian: pakai createdAt (Firebase) -> id (Date.now) -> tanggal
+        function getSubmissionTime(s) {
+            if (typeof s.createdAt === 'number') return s.createdAt;
+            if (typeof s.id === 'number' && s.id > 1e12) return s.id;
+            return parseTanggalID(s.date);
+        }
+
+        // Jam pengisian (hanya jika datanya memang menyimpan waktu)
+        function getSubmissionTimeLabel(s) {
+            const hasTime = typeof s.createdAt === 'number' || (typeof s.id === 'number' && s.id > 1e12);
+            if (!hasTime) return '';
+            return new Date(getSubmissionTime(s)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        /* ================= DATA ================= */
 
         async function loadData() {
             const stored = localStorage.getItem('lab_survei_data');
@@ -743,7 +796,7 @@
             area.innerHTML = '';
             
             let qCounter = 1;
-            // Perbaikan: Loop semua key (A, B, C, D, ...) secara dinamis
+            // Loop semua key (A, B, C, D, ...) secara dinamis
             Object.keys(config).forEach((key) => {
                 const section = config[key];
                 area.innerHTML += `
@@ -828,18 +881,28 @@
             });
         }
 
+        /* ================= DASHBOARD ADMIN ================= */
+
         function updateAdminDashboard() {
             const tbody = document.getElementById('adminTableBody');
             const countDisplay = document.getElementById('submission-count');
-            if(countDisplay) countDisplay.innerText = submissions.length;
 
             renderAdminStatistics();
             populateFilterYear();
 
-            if(!tbody) return;
+            // Data sudah difilter (cari + jenis + tahun) dan diurutkan berdasarkan tanggal pengisian
+            const data = getFilteredSubmissions();
+            if (countDisplay) countDisplay.innerText = data.length;
+
+            if (!tbody) return;
             tbody.innerHTML = '';
-            
-            submissions.forEach(s => {
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5">Data tidak ditemukan.</td></tr>`;
+                return;
+            }
+
+            data.forEach(s => {
                 const avg = (s.skor.reduce((a,b) => a+b, 0) / s.skor.length).toFixed(1);
                 
                 let labelID = "ID/NPM";
@@ -848,31 +911,35 @@
                 // Penyesuaian tampilan informasi di baris tabel berdasarkan jenis survei
                 if (s.type === 'Praktikum') {
                     labelID = "NPM";
-                    detailInfo = `${s.prodi} (${s.angkatan})`;
+                    detailInfo = `${escapeHtml(s.prodi)} (${escapeHtml(s.angkatan)})`;
                 } else if (s.type === 'Penelitian') {
                     labelID = "NIP/NPM";
-                    detailInfo = `${s.prodi} - ${s.angkatan}`;
+                    detailInfo = `${escapeHtml(s.prodi)} - ${escapeHtml(s.angkatan)}`;
                 } else if (s.type === 'Uji Lab') {
                     labelID = "ID/NIP";
-                    detailInfo = `${s.prodi} (${s.angkatan})`;
+                    detailInfo = `${escapeHtml(s.prodi)} (${escapeHtml(s.angkatan)})`;
                 }
 
-                // HTML untuk baris tabel dengan informasi identitas lengkap di satu sel
+                const jam = getSubmissionTimeLabel(s);
+
                 tbody.innerHTML += `
                     <tr>
                         <td class="ps-4 py-3">
-                            <div class="fw-bold text-secondary">${s.nama}</div>
+                            <div class="fw-bold text-secondary">${escapeHtml(s.nama)}</div>
                             <div class="small text-muted">
-                                <span class="text-primary opacity-75">${labelID}:</span> ${s.npm || '-'} | 
+                                <span class="text-primary opacity-75">${labelID}:</span> ${escapeHtml(s.npm) || '-'} | 
                                 <span class="text-primary opacity-75">Detail:</span> ${detailInfo}
                             </div>
                         </td>
                         <td>
                             <span class="badge bg-primary bg-opacity-10 text-primary px-3 rounded-pill">
-                                ${s.type}
+                                ${escapeHtml(s.type)}
                             </span>
                         </td>
-                        <td class="small text-muted">${s.date}</td>
+                        <td class="small text-muted">
+                            ${escapeHtml(s.date)}
+                            ${jam ? `<div class="text-secondary opacity-75" style="font-size:0.75rem;">${jam} WIB</div>` : ''}
+                        </td>
                         <td class="text-center">
                             <span class="fw-bold text-dark">${avg}</span>
                         </td>
@@ -883,15 +950,17 @@
 
         function populateFilterYear() {
             const yearSelect = document.getElementById('filter-year');
+            const current = yearSelect.value; // simpan pilihan saat ini
             const years = new Set();
             submissions.forEach(s => {
-                const year = s.date.split('/')[2];
+                const year = String(s.date || '').split('/')[2];
                 if (year) years.add(year);
             });
             yearSelect.innerHTML = '<option value="">Semua</option>';
             Array.from(years).sort().forEach(year => {
                 yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
             });
+            yearSelect.value = current;       // kembalikan pilihan
         }
 
         function renderAdminStatistics() {
@@ -974,15 +1043,29 @@
             });
         }
 
+        // Filter (cari nama/NPM + jenis + tahun) lalu urutkan berdasarkan waktu pengisian.
+        // Dipakai oleh tabel, Export PDF, dan Export Excel.
         function getFilteredSubmissions() {
             const typeFilter = document.getElementById('filter-type').value;
             const yearFilter = document.getElementById('filter-year').value;
-            return submissions.filter(s => {
-                const typeMatch = !typeFilter || s.type === typeFilter;
-                const yearMatch = !yearFilter || s.date.split('/')[2] === yearFilter;
-                return typeMatch && yearMatch;
-            });
+            const q = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const order = document.getElementById('sort-order')?.value || 'desc';
+
+            return submissions
+                .filter(s => {
+                    const typeMatch = !typeFilter || s.type === typeFilter;
+                    const yearMatch = !yearFilter || String(s.date || '').split('/')[2] === yearFilter;
+                    const searchMatch = !q ||
+                        String(s.nama || '').toLowerCase().includes(q) ||
+                        String(s.npm || '').toLowerCase().includes(q);
+                    return typeMatch && yearMatch && searchMatch;
+                })
+                .sort((a, b) => order === 'asc'
+                    ? getSubmissionTime(a) - getSubmissionTime(b)
+                    : getSubmissionTime(b) - getSubmissionTime(a));
         }
+
+        /* ================= EXPORT ================= */
 
         async function downloadPDFReport() {
     const filtered = getFilteredSubmissions();
@@ -1037,7 +1120,6 @@
         let dataKanan = [];
 
         // Logika penyesuaian label identitas berdasarkan tipe survei
-        // Catatan: Pastikan prodi dan angkatan disimpan saat submit agar muncul di sini
         if (s.type === 'Praktikum') {
             dataKiri = [
                 ["Nama Lengkap", `: ${s.nama}`],
@@ -1084,7 +1166,7 @@
             doc.setFont("helvetica", "bold");
             doc.text(item[0], rightCol, idY + (i * 4.5));
             doc.setFont("helvetica", "normal");
-            doc.text(item[1], rightCol + 45, idY + (i * 4.5)); // Sedikit dilebarkan jarak titik duanya
+            doc.text(item[1], rightCol + 45, idY + (i * 4.5));
         });
 
         idY += 16;
@@ -1106,7 +1188,7 @@
                         fontStyle: 'bold', 
                         textColor: [30, 58, 138],
                         fontSize: 7,
-                        cellPadding: 1.2 // Merapatkan padding indikator
+                        cellPadding: 1.2
                     } 
                 }
             ]);
@@ -1127,7 +1209,7 @@
                 textColor: [255, 255, 255], 
                 fontSize: 8,
                 halign: 'center',
-                cellPadding: 1.5 // Merapatkan padding header
+                cellPadding: 1.5
             },
             columnStyles: { 
                 0: { cellWidth: 8, halign: 'center' }, 
@@ -1135,7 +1217,7 @@
             },
             styles: { 
                 fontSize: 8, 
-                cellPadding: 1.5, // Merapatkan spasi antar baris tabel
+                cellPadding: 1.5,
                 valign: 'middle',
                 lineWidth: 0.1,
                 lineColor: [200, 200, 200],
@@ -1189,8 +1271,10 @@
                 const allQuestions = [];
                 Object.values(config).forEach(sec => allQuestions.push(...sec.questions));
                 
+                const jam = getSubmissionTimeLabel(s);
                 const row = {
                     Tanggal: s.date,
+                    Jam: jam || '-',
                     Nama: s.nama,
                     'ID/NPM': s.npm || '-',
                     Kategori: s.type
@@ -1208,7 +1292,14 @@
             XLSX.writeFile(wb, `Data_E-Survei_${Date.now()}.xlsx`);
         }
 
-        window.onload = loadData;
+        window.onload = () => {
+            loadData();
+            // Tabel langsung diperbarui saat mengetik / mengganti filter / mengganti urutan
+            document.getElementById('search-input').addEventListener('input', updateAdminDashboard);
+            document.getElementById('filter-type').addEventListener('change', updateAdminDashboard);
+            document.getElementById('filter-year').addEventListener('change', updateAdminDashboard);
+            document.getElementById('sort-order').addEventListener('change', updateAdminDashboard);
+        };
     </script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
