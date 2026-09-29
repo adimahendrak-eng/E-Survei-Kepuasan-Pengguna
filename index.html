@@ -540,6 +540,27 @@
                 </div>
             </div>
             
+            <!-- PANEL SINKRON KE WEB BEBAS LAB -->
+            <div class="glass-container p-4 mb-4" id="sync-panel">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h6 class="fw-bold mb-1">
+                            <i class="fas fa-rotate me-2"></i>Sinkron ke Web Bebas Lab
+                            <span id="sync-badge" class="badge bg-danger rounded-pill ms-2" style="display:none;">0 baru</span>
+                        </h6>
+                        <div class="small text-muted" id="sync-info">Hanya survei Praktikum yang dihitung.</div>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button id="btn-export-new" class="btn btn-primary btn-sm rounded-pill px-3" style="padding-top:.55rem;padding-bottom:.55rem;" onclick="exportNpmSurvei(true)">
+                            <i class="fas fa-file-export me-2"></i>Export Data Baru (<span id="sync-new-count">0</span>)
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="exportNpmSurvei(false)">
+                            <i class="fas fa-file-excel me-2"></i>Export Semua
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="glass-container p-4 mb-4">
                 <h6 class="fw-bold mb-3"><i class="fas fa-filter me-2"></i>Cari, Filter & Export Data</h6>
                 <div class="row g-3">
@@ -662,7 +683,7 @@
             return 0;
         }
 
-        // Waktu pengisian: pakai createdAt (Firebase) -> id (Date.now) -> tanggal
+        // Waktu pengisian: createdAt (Firebase) -> id (Date.now) -> tanggal
         function getSubmissionTime(s) {
             if (typeof s.createdAt === 'number') return s.createdAt;
             if (typeof s.id === 'number' && s.id > 1e12) return s.id;
@@ -676,7 +697,100 @@
             return new Date(getSubmissionTime(s)).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         }
 
-        /* ================= DATA ================= */
+        /* ================= SINKRON KE WEB BEBAS LAB ================= */
+        // Penanda "sudah disync" disimpan di browser ini (localStorage).
+        // Hanya survei Praktikum yang dihitung.
+
+        const SYNC_KEY = 'lab_survei_synced_ids';
+        let syncedIds = new Set();
+
+        function loadSyncedIds() {
+            try {
+                syncedIds = new Set(JSON.parse(localStorage.getItem(SYNC_KEY) || '[]'));
+            } catch (e) {
+                syncedIds = new Set();
+            }
+        }
+
+        function saveSyncedIds() {
+            try { localStorage.setItem(SYNC_KEY, JSON.stringify([...syncedIds])); } catch (e) {}
+        }
+
+        function normalizeNpm(v) {
+            return String(v ?? '').replace(/\s+/g, '').trim();
+        }
+
+        function getSyncKey(s) {
+            return String(s.id ?? `${s.npm}|${s.date}|${s.nama}`);
+        }
+
+        // Data Praktikum yang belum pernah diexport
+        function isNeedSync(s) {
+            return s.type === 'Praktikum' && normalizeNpm(s.npm) !== '' && !syncedIds.has(getSyncKey(s));
+        }
+
+        function updateSyncPanel() {
+            const badge    = document.getElementById('sync-badge');
+            const countEl  = document.getElementById('sync-new-count');
+            const infoEl   = document.getElementById('sync-info');
+            const btnNew   = document.getElementById('btn-export-new');
+            if (!badge || !countEl || !infoEl || !btnNew) return;
+
+            const baru = submissions.filter(isNeedSync);
+            const npmBaru = new Set(baru.map(s => normalizeNpm(s.npm))).size;
+
+            countEl.innerText = npmBaru;
+            btnNew.disabled = baru.length === 0;
+
+            if (baru.length > 0) {
+                badge.style.display = 'inline-block';
+                badge.innerText = `${npmBaru} NPM baru`;
+                infoEl.innerText = `${npmBaru} NPM dari survei Praktikum belum dikirim ke web bebas lab.`;
+            } else {
+                badge.style.display = 'none';
+                infoEl.innerText = 'Semua data survei Praktikum sudah disinkron.';
+            }
+        }
+
+        // onlyNew = true  -> hanya data yang belum pernah diexport
+        // onlyNew = false -> semua data Praktikum (cadangan jika import gagal)
+        function exportNpmSurvei(onlyNew) {
+            let list = submissions.filter(s => s.type === 'Praktikum' && normalizeNpm(s.npm) !== '');
+            if (onlyNew) list = list.filter(isNeedSync);
+
+            if (list.length === 0) {
+                Swal.fire('Tidak ada data baru', 'Semua data survei Praktikum sudah pernah diexport.', 'info');
+                return;
+            }
+
+            // Urut dari yang paling lama, satu baris per NPM
+            list = list.slice().sort((a, b) => getSubmissionTime(a) - getSubmissionTime(b));
+            const unik = new Map();
+            list.forEach(s => {
+                const npm = normalizeNpm(s.npm);
+                if (!unik.has(npm)) unik.set(npm, s);
+            });
+
+            const rows = [['nama', 'npm', 'prodi', 'tanggal_survei']];
+            unik.forEach((s, npm) => rows.push([String(s.nama || '').trim(), npm, String(s.prodi || '').trim(), s.date]));
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sinkron');
+            XLSX.writeFile(wb, `Sinkron_BebasLab_${Date.now()}.xlsx`);
+
+            // Tandai semua yang ikut diexport sebagai sudah disync
+            list.forEach(s => syncedIds.add(getSyncKey(s)));
+            saveSyncedIds();
+            updateAdminDashboard();
+
+            Swal.fire({
+                title: 'File berhasil dibuat',
+                html: `<b>${unik.size}</b> NPM diexport.<br><small>Buka web bebas lab, lalu pilih <b>Sinkron dari E-Survei</b> dan unggah file ini.</small>`,
+                icon: 'success',
+                confirmButtonColor: '#4338ca'
+            });
+        }
 
         async function loadData() {
             const stored = localStorage.getItem('lab_survei_data');
@@ -796,7 +910,7 @@
             area.innerHTML = '';
             
             let qCounter = 1;
-            // Loop semua key (A, B, C, D, ...) secara dinamis
+            // Perbaikan: Loop semua key (A, B, C, D, ...) secara dinamis
             Object.keys(config).forEach((key) => {
                 const section = config[key];
                 area.innerHTML += `
@@ -881,14 +995,13 @@
             });
         }
 
-        /* ================= DASHBOARD ADMIN ================= */
-
         function updateAdminDashboard() {
             const tbody = document.getElementById('adminTableBody');
             const countDisplay = document.getElementById('submission-count');
 
             renderAdminStatistics();
             populateFilterYear();
+            updateSyncPanel();
 
             // Data sudah difilter (cari + jenis + tahun) dan diurutkan berdasarkan tanggal pengisian
             const data = getFilteredSubmissions();
@@ -904,7 +1017,7 @@
 
             data.forEach(s => {
                 const avg = (s.skor.reduce((a,b) => a+b, 0) / s.skor.length).toFixed(1);
-                
+
                 let labelID = "ID/NPM";
                 let detailInfo = "";
 
@@ -921,11 +1034,14 @@
                 }
 
                 const jam = getSubmissionTimeLabel(s);
+                const penandaBaru = isNeedSync(s)
+                    ? `<span class="badge bg-danger rounded-pill ms-2" style="font-size:0.65rem;" title="Belum disinkron ke web bebas lab">Baru</span>`
+                    : '';
 
                 tbody.innerHTML += `
                     <tr>
                         <td class="ps-4 py-3">
-                            <div class="fw-bold text-secondary">${escapeHtml(s.nama)}</div>
+                            <div class="fw-bold text-secondary">${escapeHtml(s.nama)}${penandaBaru}</div>
                             <div class="small text-muted">
                                 <span class="text-primary opacity-75">${labelID}:</span> ${escapeHtml(s.npm) || '-'} | 
                                 <span class="text-primary opacity-75">Detail:</span> ${detailInfo}
@@ -1065,8 +1181,6 @@
                     : getSubmissionTime(b) - getSubmissionTime(a));
         }
 
-        /* ================= EXPORT ================= */
-
         async function downloadPDFReport() {
     const filtered = getFilteredSubmissions();
     if (filtered.length === 0) {
@@ -1120,6 +1234,7 @@
         let dataKanan = [];
 
         // Logika penyesuaian label identitas berdasarkan tipe survei
+        // Catatan: Pastikan prodi dan angkatan disimpan saat submit agar muncul di sini
         if (s.type === 'Praktikum') {
             dataKiri = [
                 ["Nama Lengkap", `: ${s.nama}`],
@@ -1166,7 +1281,7 @@
             doc.setFont("helvetica", "bold");
             doc.text(item[0], rightCol, idY + (i * 4.5));
             doc.setFont("helvetica", "normal");
-            doc.text(item[1], rightCol + 45, idY + (i * 4.5));
+            doc.text(item[1], rightCol + 45, idY + (i * 4.5)); // Sedikit dilebarkan jarak titik duanya
         });
 
         idY += 16;
@@ -1188,7 +1303,7 @@
                         fontStyle: 'bold', 
                         textColor: [30, 58, 138],
                         fontSize: 7,
-                        cellPadding: 1.2
+                        cellPadding: 1.2 // Merapatkan padding indikator
                     } 
                 }
             ]);
@@ -1209,7 +1324,7 @@
                 textColor: [255, 255, 255], 
                 fontSize: 8,
                 halign: 'center',
-                cellPadding: 1.5
+                cellPadding: 1.5 // Merapatkan padding header
             },
             columnStyles: { 
                 0: { cellWidth: 8, halign: 'center' }, 
@@ -1217,7 +1332,7 @@
             },
             styles: { 
                 fontSize: 8, 
-                cellPadding: 1.5,
+                cellPadding: 1.5, // Merapatkan spasi antar baris tabel
                 valign: 'middle',
                 lineWidth: 0.1,
                 lineColor: [200, 200, 200],
@@ -1271,10 +1386,9 @@
                 const allQuestions = [];
                 Object.values(config).forEach(sec => allQuestions.push(...sec.questions));
                 
-                const jam = getSubmissionTimeLabel(s);
                 const row = {
                     Tanggal: s.date,
-                    Jam: jam || '-',
+                    Jam: getSubmissionTimeLabel(s) || '-',
                     Nama: s.nama,
                     'ID/NPM': s.npm || '-',
                     Kategori: s.type
@@ -1293,6 +1407,7 @@
         }
 
         window.onload = () => {
+            loadSyncedIds();
             loadData();
             // Tabel langsung diperbarui saat mengetik / mengganti filter / mengganti urutan
             document.getElementById('search-input').addEventListener('input', updateAdminDashboard);
