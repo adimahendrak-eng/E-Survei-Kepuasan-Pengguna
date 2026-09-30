@@ -257,7 +257,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6">
-                        <img src="lab-utamaa.jpg" alt="Laboratorium Jalan Raya" class="hero-img" onerror="this.src='https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80'">
+                        <img src="lab-utamaa.jpg" alt="Laboratorium Jalan Raya" class="hero-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80'">
                     </div>
                 </div>
             </div>
@@ -540,6 +540,14 @@
                 </div>
             </div>
             
+            <!-- STATUS SUMBER DATA (Firebase) -->
+            <div id="data-status" class="alert alert-secondary d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 mb-4 small">
+                <span id="data-status-text">Memuat data dari Firebase...</span>
+                <button class="btn btn-sm btn-outline-dark rounded-pill px-3" onclick="refreshFromFirebase(true)">
+                    <i class="fas fa-rotate me-1"></i>Muat Ulang dari Firebase
+                </button>
+            </div>
+
             <!-- PANEL SINKRON KE WEB BEBAS LAB -->
             <div class="glass-container p-4 mb-4" id="sync-panel">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -792,36 +800,238 @@
             });
         }
 
-        async function loadData() {
-            const stored = localStorage.getItem('lab_survei_data');
-            if (stored) {
-                submissions = JSON.parse(stored);
-            } else {
-                submissions = [
-                    { id: 1, date: "15/02/2024", nama: "Dian Saputra", npm: "2115011001", type: "Praktikum", skor: Array(48).fill(4), saran: "Sangat baik" },
-                    { id: 2, date: "16/02/2024", nama: "Riana Dewi", npm: "2115011002", type: "Penelitian", skor: Array(25).fill(5), saran: "-" }
-                ];
-                saveToLocal();
-            }
+        /* ================= DATA: FIREBASE = SUMBER UTAMA ================= */
+        // Aturan main:
+        //  • Jawaban baru dianggap "terkirim" hanya setelah Firestore benar-benar menerimanya.
+        //  • Kalau gagal (internet putus, aturan Firestore menolak, dll), jawaban disimpan di ANTREAN
+        //    browser dan dikirim ulang otomatis. Tidak ada lagi data yang hilang diam-diam.
+        //  • Tabel admin selalu dibaca dari Firestore. Cache lokal hanya tampilan cadangan.
 
-            if (window.firebaseEnabled && window.fetchFirebaseSubmissions) {
-                try {
-                    const firebaseData = await window.fetchFirebaseSubmissions();
-                    if (firebaseData.length) {
-                        submissions = firebaseData;
-                        saveToLocal();
-                    }
-                } catch (err) {
-                    console.warn('Firebase load gagal:', err);
-                }
-            }
+        const CACHE_KEY    = 'lab_survei_remote_cache';   // salinan terakhir data Firestore
+        const PENDING_KEY  = 'lab_survei_pending';        // antrean jawaban yang belum terkirim
+        const LEGACY_KEY   = 'lab_survei_data';           // format lama (data hanya di browser)
+        const MIGRATED_KEY = 'lab_survei_migrated_v2';
+        const MIGRASI_DATA_LOKAL = true;                  // false = matikan pemulihan data format lama
 
-            updateAdminDashboard();
-            renderLandingStats();
+        let remoteSubmissions = [];   // data dari Firestore
+        let pending = [];             // jawaban belum terkirim (browser ini)
+        let remoteError = null;       // kegagalan membaca Firestore
+        let sendError = null;         // kegagalan mengirim ke Firestore
+        let remoteLoadedAt = null;
+        let remoteLoading = false;
+        let flushing = false;
+
+        function lsGet(key, fallback) {
+            try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+            catch (e) { return fallback; }
+        }
+        function lsSet(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+            catch (e) { return false; }
         }
 
-        function saveToLocal() {
-            localStorage.setItem('lab_survei_data', JSON.stringify(submissions));
+        function makeErr(code, message) {
+            const e = new Error(message || code);
+            e.code = code;
+            return e;
+        }
+
+        function withTimeout(promise, ms) {
+            let t;
+            const timeout = new Promise((_, reject) => {
+                t = setTimeout(() => reject(makeErr('timeout', 'Waktu tunggu habis')), ms);
+            });
+            return Promise.race([promise, timeout]).finally(() => clearTimeout(t));
+        }
+
+        function describeFbError(err) {
+            const code = err && err.code ? String(err.code).replace('firestore/', '') : '';
+            if (code === 'permission-denied') {
+                return 'Firestore menolak akses (Security Rules). Buka Firebase Console > Firestore Database > Rules, lalu pastikan koleksi "submissions" boleh dibaca dan dibuat. Rules mode uji coba biasanya kedaluwarsa setelah 30 hari.';
+            }
+            if (code === 'init') {
+                return 'Library Firebase gagal dimuat. Periksa koneksi internet, atau matikan sementara ekstensi pemblokir iklan/privasi untuk situs ini.';
+            }
+            if (code === 'timeout' || code === 'unavailable') {
+                return 'Tidak dapat menghubungi server Firebase (jaringan lambat, terputus, atau diblokir).';
+            }
+            return (err && err.message) ? err.message : 'Kesalahan tidak diketahui.';
+        }
+
+        // Gabungan tampilan: antrean lokal (belum terkirim) + data Firestore
+        function rebuildSubmissions() {
+            const pendingIds = new Set(pending.map(p => String(p.docId)));
+            const valid = remoteSubmissions.filter(r => Array.isArray(r.skor) && r.skor.length && surveyConfig[r.type]);
+            if (valid.length !== remoteSubmissions.length) {
+                console.warn(`${remoteSubmissions.length - valid.length} dokumen Firestore diabaikan karena formatnya tidak lengkap.`);
+            }
+            const remoteOnly = valid.filter(r => !r.docId || !pendingIds.has(String(r.docId)));
+            submissions = [...pending.map(p => ({ ...p, _pending: true })), ...remoteOnly];
+        }
+
+        function refreshStatusUI() {
+            const icon = document.getElementById('firebase-status');
+            const bar  = document.getElementById('data-status');
+            const text = document.getElementById('data-status-text');
+            const problem = remoteError || sendError;
+            const n = pending.length;
+
+            let kind = 'ok';
+            if (remoteLoading && !remoteLoadedAt && !problem) kind = 'loading';
+            else if (problem) kind = 'error';
+            else if (n > 0) kind = 'warn';
+
+            const titles = {
+                loading: 'Memuat data dari Firebase...',
+                ok: 'Terkoneksi dengan Firebase Cloud',
+                warn: `${n} jawaban belum terkirim ke Firebase`,
+                error: 'Firebase bermasalah: ' + describeFbError(problem)
+            };
+            const icons = {
+                loading: 'fa-spinner fa-spin text-secondary',
+                ok: 'fa-cloud text-success',
+                warn: 'fa-cloud-arrow-up text-warning',
+                error: 'fa-triangle-exclamation text-danger'
+            };
+            if (icon) icon.innerHTML = `<i class="fas ${icons[kind]}" title="${escapeHtml(titles[kind])}"></i>`;
+
+            if (bar && text) {
+                const cls = { loading: 'alert-secondary', ok: 'alert-success', warn: 'alert-warning', error: 'alert-danger' }[kind];
+                bar.className = `alert ${cls} d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3 mb-4 small`;
+                const jam = remoteLoadedAt ? remoteLoadedAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-';
+                if (kind === 'loading') {
+                    text.innerHTML = 'Memuat data dari Firebase...';
+                } else if (kind === 'ok') {
+                    text.innerHTML = `<i class="fas fa-circle-check me-1"></i>Data dimuat langsung dari Firebase: <b>${remoteSubmissions.length}</b> data (pukul ${jam}).`;
+                } else if (kind === 'warn') {
+                    text.innerHTML = `<i class="fas fa-cloud-arrow-up me-1"></i><b>${n}</b> jawaban di browser ini belum terkirim ke Firebase dan sedang dicoba kirim ulang.`;
+                } else {
+                    text.innerHTML = `<i class="fas fa-triangle-exclamation me-1"></i><b>Bermasalah dengan Firebase.</b> ${escapeHtml(describeFbError(problem))}` +
+                        `<br>Tabel di bawah menampilkan ${submissions.length} data yang tersimpan di browser ini dan mungkin <b>tidak lengkap</b>.`;
+                }
+            }
+        }
+
+        function readCache()  { const c = lsGet(CACHE_KEY, []); return Array.isArray(c) ? c : []; }
+        function readPending() { const p = lsGet(PENDING_KEY, []); return Array.isArray(p) ? p : []; }
+
+        // Muat ulang dari Firestore (sumber utama)
+        async function refreshFromFirebase(manual = false) {
+            remoteLoading = true;
+            refreshStatusUI();
+            try {
+                if (!(await fb.ready$)) throw fb.error || makeErr('init');
+                const data = await withTimeout(fb.fetchAll(), 20000);
+                remoteSubmissions = data;
+                remoteError = null;
+                remoteLoadedAt = new Date();
+                lsSet(CACHE_KEY, data);
+                rebuildSubmissions();
+                updateAdminDashboard();
+                renderLandingStats();
+                if (manual) Swal.fire({ icon: 'success', title: 'Data dimuat ulang', text: `${data.length} data dari Firebase.`, timer: 1600, showConfirmButton: false });
+                return true;
+            } catch (err) {
+                console.error('Firebase load gagal:', err);
+                remoteError = err;
+                rebuildSubmissions();
+                updateAdminDashboard();
+                if (manual) Swal.fire('Gagal memuat dari Firebase', describeFbError(err), 'error');
+                return false;
+            } finally {
+                remoteLoading = false;
+                refreshStatusUI();
+            }
+        }
+
+        // Kirim satu jawaban ke Firestore. Berhasil = keluar dari antrean.
+        async function sendPendingItem(item) {
+            try {
+                if (!(await fb.ready$)) throw fb.error || makeErr('init');
+                try {
+                    await withTimeout(fb.save(item), 15000);
+                } catch (err) {
+                    // Bisa jadi dokumen sudah tersimpan pada percobaan sebelumnya (balasan server hilang).
+                    // Aturan "create only" menolak penimpaan, jadi cek dulu apakah dokumennya sudah ada.
+                    let sudahAda = false;
+                    if (err && err.code === 'permission-denied') {
+                        try { sudahAda = await withTimeout(fb.exists(item.docId), 10000); } catch (_) {}
+                    }
+                    if (!sudahAda) throw err;
+                }
+                pending = pending.filter(p => p.docId !== item.docId);
+                lsSet(PENDING_KEY, pending);
+                rebuildSubmissions();
+                if (pending.length === 0) sendError = null;
+            } catch (err) {
+                sendError = err;
+                throw err;
+            } finally {
+                refreshStatusUI();
+            }
+        }
+
+        async function flushPending() {
+            if (flushing || pending.length === 0) return { sent: 0, failed: 0 };
+            flushing = true;
+            let sent = 0, failed = 0;
+            try {
+                for (const item of [...pending]) {
+                    try { await sendPendingItem(item); sent++; }
+                    catch (err) { failed++; console.warn('Kirim ke Firebase gagal:', err); }
+                }
+            } finally {
+                flushing = false;
+                refreshStatusUI();
+            }
+            return { sent, failed };
+        }
+
+        function dupKey(s) {
+            return [normalizeNpm(s.npm), s.type, s.date, String(s.nama || '').trim().toLowerCase()].join('|');
+        }
+
+        // Pemulihan satu kali: data format lama yang hanya ada di browser ini (tidak pernah sampai ke Firestore)
+        // dimasukkan ke antrean kirim. Data contoh dan data yang sudah ada di Firestore dilewati.
+        function migrateLegacyLocal() {
+            if (!MIGRASI_DATA_LOKAL || lsGet(MIGRATED_KEY, false)) return 0;
+            const legacy = lsGet(LEGACY_KEY, []);
+            if (!Array.isArray(legacy) || legacy.length === 0) { lsSet(MIGRATED_KEY, true); return 0; }
+
+            const remoteIds  = new Set(remoteSubmissions.map(r => String(r.id)));
+            const remoteKeys = new Set(remoteSubmissions.map(dupKey));
+            const queuedIds  = new Set(pending.map(p => String(p.id)));
+
+            const kandidat = legacy.filter(l =>
+                typeof l.id === 'number' && l.id > 1e12 &&          // dibuat di browser (bukan data contoh)
+                l.createdAt == null &&                              // data dari Firestore selalu punya createdAt
+                Array.isArray(l.skor) && l.skor.length &&
+                l.nama && surveyConfig[l.type] &&
+                !remoteIds.has(String(l.id)) && !remoteKeys.has(dupKey(l)) && !queuedIds.has(String(l.id))
+            );
+
+            kandidat.forEach(l => pending.push({ ...l, docId: `legacy_${l.id}`, createdAt: l.id }));
+            lsSet(PENDING_KEY, pending);
+            lsSet(MIGRATED_KEY, true);
+            try { localStorage.removeItem(LEGACY_KEY); } catch (e) {}
+            rebuildSubmissions();
+            return kandidat.length;
+        }
+
+        async function loadData() {
+            pending = readPending();
+            remoteSubmissions = readCache();           // tampilan awal cepat / cadangan saat offline
+            rebuildSubmissions();
+            updateAdminDashboard();
+            renderLandingStats();
+
+            const ok = await refreshFromFirebase();
+            if (ok) migrateLegacyLocal();
+
+            if (pending.length) {
+                const r = await flushPending();
+                if (r.sent && ok) await refreshFromFirebase();
+            }
         }
 
         function navigate(pageId) {
@@ -942,12 +1152,16 @@
 
         async function handleSurvey(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const form = e.target;
+            const formData = new FormData(form);
             const skorArr = Array.from(formData.values()).map(Number);
-            
+            const now = Date.now();
+
             const newSubmission = {
-                id: Date.now(),
-                date: new Date().toLocaleDateString('id-ID'),
+                id: now,
+                docId: `${now}_${Math.random().toString(36).slice(2, 8)}`,   // ID tetap: kirim ulang tidak membuat data ganda
+                createdAt: now,
+                date: new Date(now).toLocaleDateString('id-ID'),
                 nama: currentSurvey.biodata.nama,
                 npm: currentSurvey.biodata.npm,
                 angkatan: currentSurvey.biodata.angkatan,
@@ -957,24 +1171,69 @@
                 saran: document.getElementById('saran').value || "-"
             };
 
-            submissions.unshift(newSubmission);
-            saveToLocal();
+            // 1) simpan ke antrean browser DULU supaya tidak hilang, 2) baru kirim ke Firebase
+            pending.push(newSubmission);
+            lsSet(PENDING_KEY, pending);
+            rebuildSubmissions();
+            refreshStatusUI();
 
-            if (window.firebaseEnabled && window.saveSubmissionToFirebase) {
-                window.saveSubmissionToFirebase(newSubmission)
-                    .catch(err => console.warn('Firebase save gagal:', err));
+            const btn = form.querySelector('button[type="submit"]');
+            const btnHtml = btn ? btn.innerHTML : '';
+            const setBusy = (busy) => {
+                if (!btn) return;
+                btn.disabled = busy;
+                btn.innerHTML = busy ? '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim...' : btnHtml;
+            };
+
+            let terkirim = false;
+            setBusy(true);
+            try {
+                while (true) {
+                    try {
+                        await sendPendingItem(newSubmission);
+                        terkirim = true;
+                        break;
+                    } catch (err) {
+                        console.error('Gagal mengirim ke Firebase:', err);
+                        setBusy(false);
+                        const res = await Swal.fire({
+                            icon: 'warning',
+                            title: 'Belum Terkirim',
+                            html: 'Jawaban Anda <b>belum sampai ke server</b>.<br>' +
+                                  `<small class="text-muted">${escapeHtml(describeFbError(err))}</small>`,
+                            showCancelButton: true,
+                            confirmButtonText: 'Coba Kirim Lagi',
+                            cancelButtonText: 'Tutup',
+                            confirmButtonColor: '#4338ca'
+                        });
+                        if (!res.isConfirmed) break;
+                        setBusy(true);
+                    }
+                }
+            } finally {
+                setBusy(false);
             }
-            
-            Swal.fire({
-                title: 'Berhasil Terkirim!',
-                text: 'Terima kasih telah berpartisipasi dalam survei.',
-                icon: 'success',
-                confirmButtonColor: '#4338ca'
-            }).then(() => {
+
+            if (terkirim) {
+                refreshFromFirebase();   // perbarui data tanpa menunggu
+                await Swal.fire({
+                    title: 'Berhasil Terkirim!',
+                    text: 'Terima kasih telah berpartisipasi dalam survei.',
+                    icon: 'success',
+                    confirmButtonColor: '#4338ca'
+                });
                 navigate('thank-you');
-                e.target.reset();
-                document.getElementById('biodataForm').reset();
-            });
+            } else {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Jawaban Disimpan Sementara',
+                    text: 'Jawaban Anda tersimpan di perangkat ini dan akan dikirim otomatis saat koneksi ke server pulih. Jangan hapus data browser, dan buka halaman ini lagi nanti.',
+                    confirmButtonColor: '#4338ca'
+                });
+                navigate('landing-page');
+            }
+            form.reset();
+            document.getElementById('biodataForm').reset();
         }
 
         function checkAdminLogin() {
@@ -989,6 +1248,8 @@
                 if(res.value === 'admin123') {
                     updateAdminDashboard();
                     navigate('admin-dashboard');
+                    refreshFromFirebase();   // pastikan data terbaru dari Firebase
+                    flushPending();
                 } else if(res.isConfirmed) {
                     Swal.fire('Error', 'Password salah.', 'error');
                 }
@@ -1034,6 +1295,9 @@
                 }
 
                 const jam = getSubmissionTimeLabel(s);
+                const penandaPending = s._pending
+                    ? `<span class="badge bg-warning text-dark rounded-pill ms-2" style="font-size:0.65rem;" title="Belum terkirim ke Firebase">Belum terkirim</span>`
+                    : '';
                 const penandaBaru = isNeedSync(s)
                     ? `<span class="badge bg-danger rounded-pill ms-2" style="font-size:0.65rem;" title="Belum disinkron ke web bebas lab">Baru</span>`
                     : '';
@@ -1041,7 +1305,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td class="ps-4 py-3">
-                            <div class="fw-bold text-secondary">${escapeHtml(s.nama)}${penandaBaru}</div>
+                            <div class="fw-bold text-secondary">${escapeHtml(s.nama)}${penandaBaru}${penandaPending}</div>
                             <div class="small text-muted">
                                 <span class="text-primary opacity-75">${labelID}:</span> ${escapeHtml(s.npm) || '-'} | 
                                 <span class="text-primary opacity-75">Detail:</span> ${detailInfo}
@@ -1406,7 +1670,9 @@
             XLSX.writeFile(wb, `Data_E-Survei_${Date.now()}.xlsx`);
         }
 
-        window.onload = () => {
+        // Jalankan saat DOM siap. Jangan pakai window.onload: event itu menunggu SEMUA gambar/font selesai,
+        // sehingga data ikut terlambat (atau tidak muncul) kalau ada gambar yang lambat atau diblokir.
+        const initApp = () => {
             loadSyncedIds();
             loadData();
             // Tabel langsung diperbarui saat mengetik / mengganti filter / mengganti urutan
@@ -1414,46 +1680,70 @@
             document.getElementById('filter-type').addEventListener('change', updateAdminDashboard);
             document.getElementById('filter-year').addEventListener('change', updateAdminDashboard);
             document.getElementById('sort-order').addEventListener('change', updateAdminDashboard);
+
+            // Kirim ulang jawaban yang tertahan saat internet kembali / secara berkala
+            const kirimUlang = () => flushPending().then(r => { if (r.sent) refreshFromFirebase(); });
+            window.addEventListener('online', kirimUlang);
+            setInterval(() => { if (pending.length) kirimUlang(); }, 60000);
         };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+        else initApp();
     </script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    <!-- ================= LAPISAN FIREBASE ================= -->
+    <!-- Pakai import dinamis: kalau ada file yang diblokir (mis. Analytics oleh pemblokir iklan),
+         kegagalannya tertangkap dan dilaporkan di layar, tidak membuat seluruh Firebase mati diam-diam. -->
+    <script>
+        (function () {
+            const BASE = 'https://www.gstatic.com/firebasejs/9.22.2/';
+            const firebaseConfig = {
+                apiKey: "AIzaSyAq0bvA6VysZdeQuwWyP7pyZp-70SKr4n0",
+                authDomain: "e-survei-ljr.firebaseapp.com",
+                projectId: "e-survei-ljr",
+                storageBucket: "e-survei-ljr.firebasestorage.app",
+                messagingSenderId: "736288179688",
+                appId: "1:736288179688:web:59cd8fe04164f5f024505d",
+                measurementId: "G-L6Z6X9GESJ"
+            };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAq0bvA6VysZdeQuwWyP7pyZp-70SKr4n0",
-            authDomain: "e-survei-ljr.firebaseapp.com",
-            projectId: "e-survei-ljr",
-            storageBucket: "e-survei-ljr.firebasestorage.app",
-            messagingSenderId: "736288179688",
-            appId: "1:736288179688:web:59cd8fe04164f5f024505d",
-            measurementId: "G-L6Z6X9GESJ"
-        };
+            const fb = { ready: false, error: null };
+            window.fb = fb;
 
-        const app = initializeApp(firebaseConfig);
-        try { getAnalytics(app); } catch (err) { console.warn('Firebase analytics tidak dapat diinisialisasi', err); }
+            // Selalu selesai (tidak pernah reject): hasilnya true bila Firestore siap dipakai
+            fb.ready$ = (async () => {
+                try {
+                    const [appMod, fs] = await Promise.all([
+                        import(BASE + 'firebase-app.js'),
+                        import(BASE + 'firebase-firestore.js')
+                    ]);
+                    const app = appMod.initializeApp(firebaseConfig);
+                    const db  = fs.getFirestore(app);
+                    const col = fs.collection(db, 'submissions');
 
-        const db = getFirestore(app);
-        const submissionsCol = collection(db, 'submissions');
+                    // ID dokumen tetap (docId) -> kirim ulang tidak membuat data ganda
+                    fb.save = async (data) => {
+                        const { _pending, ...clean } = data;
+                        const payload = JSON.parse(JSON.stringify({ ...clean, createdAt: data.createdAt || Date.now() }));
+                        await fs.setDoc(fs.doc(db, 'submissions', String(data.docId)), payload);
+                    };
+                    fb.exists = async (docId) => (await fs.getDoc(fs.doc(db, 'submissions', String(docId)))).exists();
+                    fb.fetchAll = async () => {
+                        const snapshot = await fs.getDocs(col);
+                        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    };
 
-        async function saveSubmissionToFirebase(data) {
-            if (!submissionsCol) return;
-            await addDoc(submissionsCol, { ...data, createdAt: Date.now() });
-        }
+                    // Analytics opsional: gagal/diblokir tidak boleh mengganggu penyimpanan data
+                    import(BASE + 'firebase-analytics.js')
+                        .then(m => m.getAnalytics(app))
+                        .catch(err => console.warn('Firebase Analytics tidak aktif:', err && err.message));
 
-        async function fetchFirebaseSubmissions() {
-            if (!submissionsCol) return [];
-            const snapshot = await getDocs(submissionsCol);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        }
-
-        window.firebaseEnabled = true;
-        window.saveSubmissionToFirebase = saveSubmissionToFirebase;
-        window.fetchFirebaseSubmissions = fetchFirebaseSubmissions;
-
-        // Update ikon status Firebase
-        document.getElementById('firebase-status').innerHTML = '<i class="fas fa-cloud text-success" title="Terkoneksi dengan Firebase Cloud"></i>';
+                    fb.ready = true;
+                } catch (err) {
+                    console.error('Firebase gagal dimuat:', err);
+                    fb.error = Object.assign(new Error((err && err.message) || 'Firebase gagal dimuat'), { code: 'init' });
+                }
+                return fb.ready;
+            })();
+        })();
     </script>
 </body>
 </html>
